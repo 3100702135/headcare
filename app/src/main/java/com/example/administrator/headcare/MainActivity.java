@@ -23,6 +23,10 @@ import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.example.administrator.headcare.util.TimerTextView;
+import com.example.administrator.headcare.util.VerticalSeekBar;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -76,9 +80,9 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
         final TextView description=(TextView)findViewById(R.id.description);
 
-        SeekBar seekBarLigft= (SeekBar) findViewById(R.id.seekBarLigft);//拿到控件实例
-        seekBarLigft.setMax(100);//为控件设置大小
-        seekBarLigft.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        VerticalSeekBar verticalSeekbarF= (VerticalSeekBar) findViewById(R.id.verticalSeekbarF);//拿到前额控件实例
+        verticalSeekbarF.setMax(100);//为控件设置大小
+        verticalSeekbarF.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 description.setText("亮度生效");
@@ -89,12 +93,48 @@ public class MainActivity extends AppCompatActivity
             }
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                description.setText("当前亮度："+progress);
+                description.setText("前额亮度："+progress+"%");
             }
         });
 
+        VerticalSeekBar verticalSeekbarT= (VerticalSeekBar) findViewById(R.id.verticalSeekbarT);//拿到前额控件实例
+        verticalSeekbarT.setMax(100);//为控件设置大小
+        verticalSeekbarT.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                description.setText("亮度生效");
+            }
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                description.setText("开始设置");
+            }
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                description.setText("头顶亮度："+progress+"%");
+            }
+        });
+
+        VerticalSeekBar verticalSeekbarB= (VerticalSeekBar) findViewById(R.id.verticalSeekbarB);//拿到前额控件实例
+        verticalSeekbarB.setMax(100);//为控件设置大小
+        verticalSeekbarB.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                description.setText("亮度生效");
+            }
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                description.setText("开始设置");
+            }
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                description.setText("后枕亮度："+progress+"%");
+            }
+        });
+
+        //初始化倒计时控件
+        final TimerTextView timerTextView =findViewById(R.id.timer_text_view);
         SeekBar seekBarTime= (SeekBar) findViewById(R.id.seekBarTime);//拿到控件实例
-        seekBarTime.setMax(100);//为控件设置大小
+        seekBarTime.setMax(50);//为控件设置大小
         seekBarTime.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
@@ -106,7 +146,13 @@ public class MainActivity extends AppCompatActivity
             }
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                timerTextView.stopRun();
+                timerTextView.destroyDrawingCache();
                 description.setText("设置时间："+progress+"分钟后，关闭灯光");
+                long[] times = {progress,0};
+                timerTextView.setTimes(times);
+                timerTextView.beginRun();
+
             }
         });
         //打开，连接蓝牙
@@ -225,16 +271,6 @@ public class MainActivity extends AppCompatActivity
     public  void  openPart(View v)
     {
 //        SendStr("helloWord");
-        final TextView description=(TextView)findViewById(R.id.description);
-        int viewId = v.getId();
-        if (viewId == R.id.imageButton1) {
-            description.setText("点亮1");
-        } else if (viewId == R.id.imageButton2) {
-            description.setText("点亮2");
-        }else if (viewId == R.id.imageButton3) {
-            description.setText("点亮3");
-        }
-
 
     }
 

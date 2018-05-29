@@ -8,126 +8,139 @@
     tools:context=".MainActivity"
     tools:showIn="@layout/app_bar_main">
 
-    <TextView
-        android:id="@+id/description"
-        android:layout_width="0dp"
-        android:layout_height="50dp"
+    <com.example.administrator.headcare.util.VerticalSeekBar
+        android:id="@+id/verticalSeekbarB"
+        android:layout_width="80dp"
+        android:layout_height="200dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginTop="68dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/timer_text_view" />
+
+    <com.example.administrator.headcare.util.VerticalSeekBar
+        android:id="@+id/verticalSeekbarF"
+        android:layout_width="80dp"
+        android:layout_height="200dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="68dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/timer_text_view" />
+
+    <com.example.administrator.headcare.util.VerticalSeekBar
+        android:id="@+id/verticalSeekbarT"
+        android:layout_width="80dp"
+        android:layout_height="200dp"
+        android:layout_marginEnd="50dp"
         android:layout_marginLeft="50dp"
         android:layout_marginRight="50dp"
-        android:layout_marginTop="50dp"
+        android:layout_marginStart="50dp"
+        android:layout_marginTop="68dp"
+        app:layout_constraintEnd_toStartOf="@+id/verticalSeekbarB"
+        app:layout_constraintStart_toEndOf="@+id/verticalSeekbarF"
+        app:layout_constraintTop_toBottomOf="@+id/timer_text_view" />
+
+    <TextView
+        android:id="@+id/textViewF"
+        android:layout_width="80dp"
+        android:layout_height="30dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:text="前额亮度"
+        android:textSize="18sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/verticalSeekbarF" />
+
+    <TextView
+        android:id="@+id/textViewT"
+        android:layout_width="80dp"
+        android:layout_height="30dp"
+        android:layout_marginEnd="50dp"
+        android:layout_marginLeft="50dp"
+        android:layout_marginRight="50dp"
+        android:layout_marginStart="50dp"
+        android:layout_marginTop="10dp"
+        android:text="头顶亮度"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toStartOf="@+id/textViewB"
+        app:layout_constraintStart_toEndOf="@+id/textViewF"
+        app:layout_constraintTop_toBottomOf="@+id/verticalSeekbarT" />
+
+    <TextView
+        android:id="@+id/textViewB"
+        android:layout_width="80dp"
+        android:layout_height="30dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="10dp"
+        android:text="后枕亮度"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/verticalSeekbarB" />
+
+    <TextView
+        android:id="@+id/description"
+        android:layout_width="342dp"
+        android:layout_height="39dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginLeft="50dp"
+        android:layout_marginRight="50dp"
+        android:layout_marginTop="16dp"
+        android:ellipsize="marquee"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:gravity="center"
+        android:marqueeRepeatLimit="marquee_forever"
         android:onClick="openPart"
-        android:text="Hello World!"
+        android:singleLine="true"
+        android:text="欢迎使用黑可得激光生发头盔！"
         android:textColor="@android:color/holo_green_light"
-        app:layout_constraintBottom_toTopOf="@+id/seekBarLigft"
-        app:layout_constraintHorizontal_bias="0.0"
+        android:textSize="24sp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="@string/nav_header_desc" />
+        app:layout_constraintVertical_bias="0.0"
+        tools:text="欢迎使用黑可得激光生发头盔！" />
 
 
-    <ImageButton
-        android:id="@+id/imageButton1"
-        android:layout_width="96dp"
-        android:layout_height="96dp"
-        android:layout_marginLeft="30dp"
-        android:layout_marginRight="200dp"
-        android:layout_marginTop="224dp"
-        android:onClick="openPart"
-        app:layout_constraintHorizontal_bias="0.31"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@android:drawable/alert_dark_frame" />
-
-    <ImageButton
-        android:id="@+id/imageButton2"
-        android:layout_width="96dp"
-        android:layout_height="96dp"
-        android:layout_marginLeft="200dp"
-        android:layout_marginRight="30dp"
-        android:layout_marginTop="224dp"
-        android:onClick="openPart"
-        app:layout_constraintHorizontal_bias="0.689"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@android:drawable/alert_dark_frame" />
-
-    <ImageButton
-        android:id="@+id/imageButton3"
-        android:layout_width="96dp"
-        android:layout_height="96dp"
-        android:layout_marginTop="130dp"
-        android:onClick="openPart"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@android:drawable/alert_dark_frame" />
-
-
-    <TextView
-        android:id="@+id/textViewLight"
-        android:layout_width="80dp"
-        android:layout_height="50dp"
-        android:layout_marginBottom="150dp"
-        android:layout_marginEnd="300dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="300dp"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="250dp"
-        android:text="照射亮度："
+    <com.example.administrator.headcare.util.TimerTextView
+        android:id="@+id/timer_text_view"
+        android:layout_width="350dp"
+        android:layout_height="44dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginStart="8dp"
+        android:gravity="center_horizontal"
+        android:text="剩余照射时间："
+        android:textColor="@android:color/holo_green_light"
+        android:textSize="18sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageButton1"
-        app:layout_constraintVertical_bias="0.861" />
-
-    <SeekBar
-        android:id="@+id/seekBarLigft"
-        style="@style/AlertDialog.AppCompat.Light"
-        android:layout_width="230dp"
-        android:layout_height="50dp"
-        android:layout_marginBottom="150dp"
-        android:layout_marginLeft="60dp"
-        android:layout_marginStart="60dp"
-        android:layout_marginTop="250dp"
-        android:max="100"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.489"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/description" />
-
-
-    <TextView
-        android:id="@+id/textViewTime"
-        android:layout_width="80dp"
-        android:layout_height="50dp"
-        android:layout_marginBottom="32dp"
-        android:layout_marginEnd="300dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="300dp"
-        android:layout_marginStart="10dp"
-        android:text="照射时间："
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.27" />
 
     <SeekBar
         android:id="@+id/seekBarTime"
         style="@style/TextAppearance.Compat.Notification.Time"
-        android:layout_width="230dp"
-        android:layout_height="50dp"
-        android:layout_marginLeft="60dp"
-        android:layout_marginStart="60dp"
-        android:layout_marginTop="300dp"
+        android:layout_width="352dp"
+        android:layout_height="44dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="80dp"
         android:max="30"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/description" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
 
 </android.support.constraint.ConstraintLayout>
