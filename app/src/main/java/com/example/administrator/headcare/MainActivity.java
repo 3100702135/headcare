@@ -3,13 +3,14 @@ package com.example.administrator.headcare;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothSocket;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -24,12 +25,17 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.administrator.headcare.util.BluetoothManager;
+import com.example.administrator.headcare.util.BluetoothReceiver;
 import com.example.administrator.headcare.util.TimerTextView;
 import com.example.administrator.headcare.util.VerticalSeekBar;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
@@ -43,17 +49,23 @@ public class MainActivity extends AppCompatActivity
     private  String partT  ="partT";//上区域
     private  String partB ="partB";//后区域
     private  String items[];
+    private  String clickAddress;
 
+    ArrayList<String> blueList = new ArrayList<String>();
     private BluetoothAdapter adapter = null;
-    private BluetoothManager bluetoothManager;
+    private BluetoothManager mBluetoothManager;
     private BluetoothDevice device = null;
     private BluetoothSocket btSocket  = null;
     private OutputStream outStream = null;
     private InputStream inStream = null;
-    private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");  //这条是蓝牙串口通用的UUID，不要更改
+    private static final UUID MY_UUID = UUID.fromString("d2ea0fdc-1982-40e1-98e8-9dcd45130b8e");  //这条是蓝牙串口通用的UUID，不要更改
     private static String address = "b8:76:3f:ed:d0:a4"; // <==要连接的蓝牙设备MAC地址
     private EditText message;
-
+    private TextView description;
+    private BluetoothReceiver mReceiver = new BluetoothReceiver();
+    HashMap<String,String> blueMap = new HashMap<String,String>();
+    private String msg = "我是第?次通话 ";
+    private int i = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,16 +73,6 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-//        fab.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
-//            }
-//        });
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -78,7 +80,7 @@ public class MainActivity extends AppCompatActivity
         toggle.syncState();
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-        final TextView description=(TextView)findViewById(R.id.description);
+        description=(TextView)findViewById(R.id.description);
 
         VerticalSeekBar verticalSeekbarF= (VerticalSeekBar) findViewById(R.id.verticalSeekbarF);//拿到前额控件实例
         verticalSeekbarF.setMax(100);//为控件设置大小
@@ -172,7 +174,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
+//        getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
 
@@ -180,9 +182,9 @@ public class MainActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
+//        if (id == R.id.blueItem) {
+//            return true;
+//        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -223,29 +225,23 @@ public class MainActivity extends AppCompatActivity
                 startActivity(intent);
                 ensureDiscoverable();
             }
-            //获得已配对的远程蓝牙设备的集合
-            Set<BluetoothDevice> devices = adapter.getBondedDevices();
-            if(devices.size()>0){
-                for(Iterator<BluetoothDevice> it = devices.iterator(); it.hasNext();){
-                    BluetoothDevice device = (BluetoothDevice)it.next();
-                    //打印出远程蓝牙设备的物理地址
-                    show(device.getName());
-                    if(device.getName().equals("EDIFIER W800BT"))
-                    {
-                        show(device.getName());
-                        show(device.getAddress());
-//                        BluetoothGatt mBluetoothGatt = device.connectGatt(this, false, mGattCallback);
-                    }
-
-                }
-            }else{
-                show("还没有已配对的远程蓝牙设备！");
-            }
         }else{
             System.out.println("本机没有蓝牙设备！");
         }
+        //注册设备被发现时的广播
+        IntentFilter filter=new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        registerReceiver(new BluetoothReceiver(),filter);
+        //注册一个搜索结束时的广播
+        IntentFilter filter2=new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+        registerReceiver(new BluetoothReceiver(),filter2);
     }
 
+    public void onDestroy() {
+        super.onDestroy();
+        //解除注册
+        unregisterReceiver(mReceiver);
+        Log.e("destory","解除注册");
+    }
     // Function to send Bluetooth message
     public void SendStr(String str) {
         byte[] bf = new byte[33];
@@ -274,6 +270,14 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+    //刷新蓝牙
+    public  void  reflashBlue(View v)
+    {
+//        SendStr("helloWord");
+        startActivityForResult();
+
+    }
+
     //使本机蓝牙在300秒内可被搜索
     private void ensureDiscoverable() {
         if (adapter.getScanMode() != BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
@@ -281,6 +285,23 @@ public class MainActivity extends AppCompatActivity
             discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
             startActivity(discoverableIntent);
         }
+        //当蓝牙设备没有启动成功时返回false
+        boolean result = adapter.startDiscovery();
+        //获得已配对的远程蓝牙设备的集合
+        blueList.clear();
+        blueMap.clear();
+        Set<BluetoothDevice> devices = adapter.getBondedDevices();
+//        if(devices.size()>0){
+//            for(Iterator<BluetoothDevice> it = devices.iterator(); it.hasNext();){
+//                BluetoothDevice device = (BluetoothDevice)it.next();
+//                //打印出远程蓝牙设备的物理地址
+//                blueList.add(device.getName());
+//                blueMap.put(device.getName(),device.getAddress());
+//            }
+//        }else{
+//            show("还没有已配对的远程蓝牙设备！");
+//        }
+//        showChoose(blueList.toArray(new String[blueList.size()]));
     }
 
     private void  show( String message)
@@ -307,13 +328,14 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    private void  showChoose()
+    private void  showChoose(final String items[])
     {
 //        final String items[] = {"我是Item一", "我是Item二", "我是Item三", "我是Item四"};
+        HashMap<String, String> map = new HashMap<String, String>();
         AlertDialog dialog = new AlertDialog.Builder(this)
 //                .setIcon(R.mipmap.icon)//设置标题的图片
-                .setTitle("单选列表对话框")//设置对话框的标题
-                .setSingleChoiceItems(items, 1, new DialogInterface.OnClickListener() {
+                .setTitle("已搜索到的蓝牙设备")//设置对话框的标题
+                .setSingleChoiceItems(items, items.length-1, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         Toast.makeText(MainActivity.this, items[which], Toast.LENGTH_SHORT).show();
@@ -328,9 +350,48 @@ public class MainActivity extends AppCompatActivity
                 .setPositiveButton("确定", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        description.setText(items[which+1]);
+                        clickAddress =blueMap.get(items[which+1]);
                         dialog.dismiss();
+                        adapter.cancelDiscovery();
+                        new BlueThread().start();
                     }
                 }).create();
         dialog.show();
     }
+
+    public class BlueThread extends Thread {
+        //继承Thread类，并改写其run方法
+        public void run(){
+            BluetoothDevice device = adapter.getRemoteDevice(clickAddress);
+            try {
+                btSocket = device.createRfcommSocketToServiceRecord(MY_UUID);
+                btSocket.connect();
+                Log.e("error", "ON RESUME: BT connection established, data transfer link open.");
+            } catch (IOException e) {
+                try {
+                    try {
+                        btSocket =(BluetoothSocket) device.getClass().getMethod("createRfcommSocket", new Class[] {int.class}).invoke(device,1);
+                        btSocket.connect();
+                    } catch (IllegalAccessException e1) {
+                        e1.printStackTrace();
+                    } catch (InvocationTargetException e1) {
+                        e1.printStackTrace();
+                    } catch (NoSuchMethodException e1) {
+                        e1.printStackTrace();
+                    }
+                } catch (IOException e2) {
+                    try {
+                        btSocket.close();
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                        Log.e("error", "关闭蓝牙异常", e2);
+                    }
+                    Log.e("error", "连接蓝牙异常", e2);
+                }
+            }
+        }
+    }
+
+
 }

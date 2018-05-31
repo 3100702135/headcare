@@ -44,14 +44,16 @@
     <TextView
         android:id="@+id/textViewF"
         android:layout_width="80dp"
-        android:layout_height="30dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="15dp"
         android:layout_marginLeft="10dp"
         android:layout_marginStart="10dp"
         android:layout_marginTop="10dp"
         android:text="前额亮度"
         android:textSize="18sp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/verticalSeekbarF" />
+        app:layout_constraintTop_toBottomOf="@+id/imageButton" />
 
     <TextView
         android:id="@+id/textViewT"
@@ -82,11 +84,12 @@
 
     <TextView
         android:id="@+id/description"
-        android:layout_width="342dp"
-        android:layout_height="39dp"
+        android:layout_width="200dp"
+        android:layout_height="29dp"
         android:layout_marginBottom="8dp"
+        android:layout_marginEnd="20dp"
         android:layout_marginLeft="50dp"
-        android:layout_marginRight="50dp"
+        android:layout_marginRight="20dp"
         android:layout_marginTop="16dp"
         android:ellipsize="marquee"
         android:focusable="true"
@@ -99,8 +102,8 @@
         android:textColor="@android:color/holo_green_light"
         android:textSize="24sp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/imageButton"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.0"
         tools:text="欢迎使用黑可得激光生发头盔！" />
@@ -123,7 +126,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.27" />
+        app:layout_constraintVertical_bias="0.313" />
 
     <SeekBar
         android:id="@+id/seekBarTime"
@@ -139,8 +142,26 @@
         android:max="30"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintVertical_bias="0.052" />
+
+    <ImageButton
+        android:id="@+id/imageButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="406dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:onClick="reflashBlue"
+        app:layout_constraintBottom_toTopOf="@+id/textViewF"
+        app:layout_constraintEnd_toStartOf="@+id/description"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@android:drawable/ic_lock_power_off" />
 
 </android.support.constraint.ConstraintLayout>
