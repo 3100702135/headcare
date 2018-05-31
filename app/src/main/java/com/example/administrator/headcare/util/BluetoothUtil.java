@@ -82,9 +82,6 @@ public class BluetoothUtil {
 
     @SuppressLint("NewApi")
     public static boolean isConnected(BluetoothSocket socket) {
-        if(android.os.Build.VERSION.SDK_INT >= 14) {
-            return socket.isConnected();
-        } else {
             try {
                 Field fld = BluetoothSocket.class.getDeclaredField("mClosed");
                 fld.setAccessible(true);
@@ -92,7 +89,6 @@ public class BluetoothUtil {
             } catch (Exception e) {
                 Log.d(TAG, "error happened", e);
             }
-        }
         return false;
     }
 

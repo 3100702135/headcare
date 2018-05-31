@@ -37,7 +37,8 @@ public  class BluetoothManager implements IBluetoothManager {
     private static BluetoothManager mInstance;
     private Context mContext;
 
-    private BluetoothManager(Context context) {
+    public BluetoothManager(Context context) {
+        mBluetoothAdapter= BluetoothAdapter.getDefaultAdapter();
         mContext = context;
     }
 
@@ -65,7 +66,7 @@ public  class BluetoothManager implements IBluetoothManager {
     //已绑定的设备列表
     private List<BluetoothDevice> mBoundedDeviceList = new ArrayList<BluetoothDevice>();
     /**判断设备是否匹配目标的接口*/
-    private IBluetoothEventHandler mBluetoothEventHandler;
+    public IBluetoothEventHandler mBluetoothEventHandler;
     //服务器端Socket，由此获取服务端BluetoothSocket
     private BluetoothServerSocket mBluetoothServerSocket;
     //作为服务端的socket
@@ -395,10 +396,10 @@ public  class BluetoothManager implements IBluetoothManager {
                         Log.d(TAG, "readDataFromClientConnection()| connect success");
                     }
 
-                    //可能第一个线程卡在Connect方法内，第二个线程运行到此处了
-                    while(!BluetoothUtil.isConnected(clientSocket)) {
-                        Thread.sleep(300);
-                    }
+//                    //可能第一个线程卡在Connect方法内，第二个线程运行到此处了
+//                    while(!BluetoothUtil.isConnected(clientSocket)) {
+//                        Thread.sleep(300);
+//                    }
 
                     //TODO 增加同步控制，否则两个线程会都运行到此处使用里面的outputStream
                     os = clientSocket.getOutputStream();

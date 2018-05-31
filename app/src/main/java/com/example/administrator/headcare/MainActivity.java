@@ -37,6 +37,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -53,7 +54,7 @@ public class MainActivity extends AppCompatActivity
 
     ArrayList<String> blueList = new ArrayList<String>();
     private BluetoothAdapter adapter = null;
-    private BluetoothManager mBluetoothManager;
+    private BluetoothManager mBluetoothManager = new BluetoothManager(this);
     private BluetoothDevice device = null;
     private BluetoothSocket btSocket  = null;
     private OutputStream outStream = null;
@@ -64,6 +65,7 @@ public class MainActivity extends AppCompatActivity
     private TextView description;
     private BluetoothReceiver mReceiver = new BluetoothReceiver();
     HashMap<String,String> blueMap = new HashMap<String,String>();
+    String objName = "YOGA";
     private String msg = "我是第?次通话 ";
     private int i = 0;
 
@@ -154,7 +156,7 @@ public class MainActivity extends AppCompatActivity
                 long[] times = {progress,0};
                 timerTextView.setTimes(times);
                 timerTextView.beginRun();
-
+                SendStr("time"+progress);
             }
         });
         //打开，连接蓝牙
@@ -214,55 +216,69 @@ public class MainActivity extends AppCompatActivity
 
     public void startActivityForResult() {
         //获得BluetoothAdapter对象，该API是android 2.0开始支持的
-        adapter = BluetoothAdapter.getDefaultAdapter();
-        //adapter不等于null，说明本机有蓝牙设备
-        if(adapter != null){
-            System.out.println("本机有蓝牙设备！");
-            //如果蓝牙设备未开启
-            if(adapter !=null){
-                Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                //请求开启蓝牙设备
-                startActivity(intent);
-                ensureDiscoverable();
+//        adapter = BluetoothAdapter.getDefaultAdapter();
+        mBluetoothManager.enableBluetooth();
+        List<BluetoothDevice> boundedList = mBluetoothManager.getBoundedDevices();
+        if(null != boundedList) {
+            for(BluetoothDevice device : boundedList) {
+                if(device.getName().contains(objName)) {
+                    mBluetoothManager.createConnection(device);
+                }
             }
-        }else{
-            System.out.println("本机没有蓝牙设备！");
         }
-        //注册设备被发现时的广播
-        IntentFilter filter=new IntentFilter(BluetoothDevice.ACTION_FOUND);
-        registerReceiver(new BluetoothReceiver(),filter);
-        //注册一个搜索结束时的广播
-        IntentFilter filter2=new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
-        registerReceiver(new BluetoothReceiver(),filter2);
+        Log.d("TAG", "create connection for bounded devices");
+        List<BluetoothDevice> foundedList = mBluetoothManager.getFoundedDevices();
+        if(null != foundedList) {
+            for(BluetoothDevice device : foundedList) {
+                if(device.getName().contains(objName)) {
+                    mBluetoothManager.createConnection(device);
+                }
+            }
+        }
+        Log.d("TAG", "create connection for found devices");
     }
 
-    public void onDestroy() {
-        super.onDestroy();
-        //解除注册
-        unregisterReceiver(mReceiver);
-        Log.e("destory","解除注册");
-    }
     // Function to send Bluetooth message
     public void SendStr(String str) {
-        byte[] bf = new byte[33];
-        bf = str.getBytes();
-        if((!str.equals("")) && (btSocket!=null)) {
-            try {
-                outStream = btSocket.getOutputStream();
-                outStream.write(bf);
-                outStream.write('\0');    // Send an ending sign
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            try {
-                if (outStream != null) {
-                    outStream.flush();
+        BluetoothDevice targetDevice = null;
+        targetDevice = GetBluetoothDevice(mBluetoothManager);
+        if(null == targetDevice) {
+            Toast.makeText(getApplicationContext(), "未连接蓝牙设备", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        mBluetoothManager.writeDataToClientConnection(targetDevice.getAddress(),("来自客户端手机端消息：" + str).getBytes());
+
+    }
+
+    //刷新蓝牙
+    public  BluetoothDevice  GetBluetoothDevice(BluetoothManager mBluetoothManager)
+    {
+        if(mBluetoothManager==null)
+        {
+            return null;
+        }
+        BluetoothDevice targetDevice = null;
+        List<BluetoothDevice> boundedList = mBluetoothManager.getBoundedDevices();
+        if(null != boundedList) {
+            for(BluetoothDevice device : boundedList) {
+                if(device.getName().contains(objName)) {
+                    targetDevice = device;
+                    break;
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
             }
         }
+        List<BluetoothDevice> foundedList = mBluetoothManager.getFoundedDevices();
+        if(null != foundedList) {
+            for(BluetoothDevice device : foundedList) {
+                if(device.getName().contains(objName)) {
+                    targetDevice = device;
+                    break;
+                }
+            }
+        }
+        return targetDevice;
     }
+
     //打开灯板
     public  void  openPart(View v)
     {
@@ -278,31 +294,31 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    //使本机蓝牙在300秒内可被搜索
-    private void ensureDiscoverable() {
-        if (adapter.getScanMode() != BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
-            Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-            discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
-            startActivity(discoverableIntent);
-        }
-        //当蓝牙设备没有启动成功时返回false
-        boolean result = adapter.startDiscovery();
-        //获得已配对的远程蓝牙设备的集合
-        blueList.clear();
-        blueMap.clear();
-        Set<BluetoothDevice> devices = adapter.getBondedDevices();
-//        if(devices.size()>0){
-//            for(Iterator<BluetoothDevice> it = devices.iterator(); it.hasNext();){
-//                BluetoothDevice device = (BluetoothDevice)it.next();
-//                //打印出远程蓝牙设备的物理地址
-//                blueList.add(device.getName());
-//                blueMap.put(device.getName(),device.getAddress());
-//            }
-//        }else{
-//            show("还没有已配对的远程蓝牙设备！");
+//    //使本机蓝牙在300秒内可被搜索
+//    private void ensureDiscoverable() {
+//        if (adapter.getScanMode() != BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
+//            Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+//            discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
+//            startActivity(discoverableIntent);
 //        }
-//        showChoose(blueList.toArray(new String[blueList.size()]));
-    }
+//        //当蓝牙设备没有启动成功时返回false
+//        boolean result = adapter.startDiscovery();
+//        //获得已配对的远程蓝牙设备的集合
+//        blueList.clear();
+//        blueMap.clear();
+//        Set<BluetoothDevice> devices = adapter.getBondedDevices();
+////        if(devices.size()>0){
+////            for(Iterator<BluetoothDevice> it = devices.iterator(); it.hasNext();){
+////                BluetoothDevice device = (BluetoothDevice)it.next();
+////                //打印出远程蓝牙设备的物理地址
+////                blueList.add(device.getName());
+////                blueMap.put(device.getName(),device.getAddress());
+////            }
+////        }else{
+////            show("还没有已配对的远程蓝牙设备！");
+////        }
+////        showChoose(blueList.toArray(new String[blueList.size()]));
+//        }
 
     private void  show( String message)
     {
