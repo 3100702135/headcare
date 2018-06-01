@@ -195,7 +195,6 @@ public class MainActivity extends AppCompatActivity
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
-
         if (id == R.id.nav_camera) {
             // Handle the camera action
         } else if (id == R.id.nav_gallery) {
@@ -286,13 +285,13 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    //刷新蓝牙
-    public  void  reflashBlue(View v)
-    {
-//        SendStr("helloWord");
-        startActivityForResult();
-
-    }
+//    //刷新蓝牙
+//    public  void  reflashBlue(View v)
+//    {
+////        SendStr("helloWord");
+//        startActivityForResult();
+//
+//    }
 
 //    //使本机蓝牙在300秒内可被搜索
 //    private void ensureDiscoverable() {
