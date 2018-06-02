@@ -83,9 +83,16 @@ public class BluetoothUtil {
     @SuppressLint("NewApi")
     public static boolean isConnected(BluetoothSocket socket) {
             try {
-                Field fld = BluetoothSocket.class.getDeclaredField("mClosed");
-                fld.setAccessible(true);
-                return fld.getBoolean(socket);
+                if(socket != null)
+                {
+                    return socket.isConnected();
+                }
+                else {
+                    return  false;
+                }
+//                Field fld = BluetoothSocket.class.getDeclaredField("mClosed");
+//                fld.setAccessible(true);
+//                return fld.getBoolean(socket);
             } catch (Exception e) {
                 Log.d(TAG, "error happened", e);
             }

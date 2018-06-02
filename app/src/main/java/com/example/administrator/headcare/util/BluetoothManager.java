@@ -10,6 +10,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
 
+import java.io.BufferedOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -28,7 +30,7 @@ public  class BluetoothManager implements IBluetoothManager {
 //  private static final UUID UUID_COMMON = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
     /**服务端的UUID*/
-    private static final UUID UUID_SERVER = UUID.fromString("d2ea0fdc-1982-40e1-98e8-9dcd45130b8e");
+    private static final UUID UUID_SERVER = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
     /**客户端的UUID*/
     private static final UUID UUID_CLIENT = UUID_SERVER;
@@ -71,7 +73,7 @@ public  class BluetoothManager implements IBluetoothManager {
     private BluetoothServerSocket mBluetoothServerSocket;
     //作为服务端的socket
     private BluetoothSocket mServerCommuicateBluetoothSocket;
-    //作为客户端的socket, 可能有多个客户端
+    //作为客户端的读取socket
     private HashMap<String, BluetoothSocket> mClientCommunicateBluetoothSocketMap = new HashMap<String, BluetoothSocket>();
 
     //当前正在进行绑定操作的设备列表
@@ -193,7 +195,6 @@ public  class BluetoothManager implements IBluetoothManager {
         if(null == device) {
             return;
         }
-
         if (null != mBluetoothAdapter) {
             mBluetoothAdapter.cancelDiscovery();
         }
@@ -201,13 +202,11 @@ public  class BluetoothManager implements IBluetoothManager {
         if(null == address) {
             return;
         }
-
         //如果已经开始了创建连接的动作，则不再进行后续操作，否则会出现socket连接被覆盖，socket关闭等各种异常
         if(BluetoothUtil.isConnectionBegined(address)) {
             return;
         }
         BluetoothUtil.notifyBeginConnection(address);
-
         switch (device.getBondState()) {
             case BluetoothDevice.BOND_BONDED:
                 // 已经绑定了，则创建指向目标的客户端socket
@@ -238,16 +237,14 @@ public  class BluetoothManager implements IBluetoothManager {
             clientBluetoothSocket = device.createRfcommSocketToServiceRecord(UUID_CLIENT);
             mClientCommunicateBluetoothSocketMap.put(device.getAddress(), clientBluetoothSocket);
             Log.d(TAG, "createClientSocket()| create a client socket success");
-
             resultCode = IBluetoothEventHandler.RESULT_SUCCESS;
+            Log.v(TAG, "createClientSocket()| create a client socket success");
         } catch (Exception ex) {
             Log.d(TAG, "createClientSocket()| error happened", ex);
         }
-
         if (null != mBluetoothEventHandler) {
             mBluetoothEventHandler.onClientSocketConnectResult(device, resultCode);
         }
-
         //对外连接建立后需要开始监听从client链接写入的数据，并返回给外层
         readDataFromClientConnection(device.getAddress());
     }
@@ -277,11 +274,9 @@ public  class BluetoothManager implements IBluetoothManager {
                     while(true) {
                         //is的 read是阻塞的，来了数据才往下走
                         int bytesRead = is.read(tempData);
-
                         if(bytesRead == -1) {
                             continue;
                         }
-
                         if(null != mBluetoothEventHandler) {
                             mBluetoothEventHandler.onReadServerSocketData(
                                     mServerCommuicateBluetoothSocket.getRemoteDevice(), tempData, bytesRead);
@@ -312,8 +307,11 @@ public  class BluetoothManager implements IBluetoothManager {
                     }
                     //TODO 增加多线程控制
                     os = mServerCommuicateBluetoothSocket.getOutputStream();
-                    os.write(data);
-                    os.flush();
+                    if(os!=null)
+                    {
+                        os.write(data);
+                        os.flush();
+                    }
                     Log.d(TAG, "writeDataToServerConnection()| write success");
                 } catch (Exception e) {
                     Log.d(TAG, "writeDataToServerConnection()| write data failed", e);
@@ -338,9 +336,7 @@ public  class BluetoothManager implements IBluetoothManager {
             Log.d(TAG, "readDataFromClientConnection()| socket is null");
             return;
         }
-
         Thread thread = new Thread(new Runnable() {
-
             @Override
             public void run() {
                 InputStream is = null;
@@ -348,19 +344,18 @@ public  class BluetoothManager implements IBluetoothManager {
                     // 如果调用两次connect,会抛出异常
                     clientSocket.connect();
                     Log.d(TAG, "readDataFromClientConnection()| connect success");
-                    is = clientSocket.getInputStream();
-                    byte[] tempData = new byte[256];
-                    while (true) {
-                        // is的 read是阻塞的，来了数据就往下走
-                        int bytesRead = is.read(tempData);
-                        if (bytesRead == -1) {
-                            continue;
-                        }
-                        if (null != mBluetoothEventHandler) {
-                            mBluetoothEventHandler.onReadClientSocketData(
-                                    clientSocket.getRemoteDevice(), tempData, bytesRead);
-                        }
-                    }
+//                    is = clientSocket.getInputStream();
+//                    byte[] tempData = new byte[256];
+//                    while (true) {
+//                        // is的 read是阻塞的，来了数据就往下走
+//                        int bytesRead = is.read();
+//                        if (bytesRead == -1) {
+//                            continue;
+//                        }
+//                        if (null != mBluetoothEventHandler) {
+//                            mBluetoothEventHandler.onReadClientSocketData(clientSocket.getRemoteDevice(), tempData, bytesRead);
+//                        }
+//                    }
                 } catch (Exception e) {
                     Log.d(TAG, "readDataFromClientConnection()|read data failed", e);
                 } finally {
@@ -383,7 +378,7 @@ public  class BluetoothManager implements IBluetoothManager {
                     if(null == mClientCommunicateBluetoothSocketMap) {
                         return;
                     }
-                    BluetoothSocket clientSocket = mClientCommunicateBluetoothSocketMap.get(deviceAddress);
+                    final BluetoothSocket clientSocket = mClientCommunicateBluetoothSocketMap.get(deviceAddress);
                     if(null == clientSocket) {
                         return;
                     }
@@ -395,23 +390,27 @@ public  class BluetoothManager implements IBluetoothManager {
                         clientSocket.connect();
                         Log.d(TAG, "readDataFromClientConnection()| connect success");
                     }
-
-//                    //可能第一个线程卡在Connect方法内，第二个线程运行到此处了
-//                    while(!BluetoothUtil.isConnected(clientSocket)) {
+                    //可能第一个线程卡在Connect方法内，第二个线程运行到此处了
+//                    while(BluetoothUtil.isConnected(clientSocket)) {
 //                        Thread.sleep(300);
 //                    }
-
                     //TODO 增加同步控制，否则两个线程会都运行到此处使用里面的outputStream
+                    if (!clientSocket.isConnected())
+                    {
+                        clientSocket.isConnected();
+                    }
                     os = clientSocket.getOutputStream();
                     os.write(data);
                     os.flush();
+//                    os.close();
+//                    clientSocket.close();
                     Log.d(TAG, "writeDataToClientConnection ()| success");
                 } catch (Exception e) {
                     Log.d(TAG, "writeDataToClientConnection ()| write data failed", e);
                 } finally {
 //                  if(null != os) {
-                    //这里要注意, 不能close, 否则对方收不到消息
-                    //报错:java.io.IOException: bt socket closed, read return: -1
+////                    这里要注意, 不能close, 否则对方收不到消息
+////                    报错:java.io.IOException: bt socket closed, read return: -1
 //                      try {
 //                          //os.close();
 //                          os = null;

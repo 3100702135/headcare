@@ -25,6 +25,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.chipsen.bleservice.BluetoothLeService;
 import com.example.administrator.headcare.util.BluetoothManager;
 import com.example.administrator.headcare.util.BluetoothReceiver;
 import com.example.administrator.headcare.util.TimerTextView;
@@ -44,7 +45,7 @@ import java.util.UUID;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     private  String powerValue;//电量值
-    private  String timeValue;//设置的照射时间
+    private  String timeValue="timeV";//设置的照射时间
     private  String lightValue;//设置的照射亮度
     private  String partF ="partF";//前区域
     private  String partT  ="partT";//上区域
@@ -59,13 +60,13 @@ public class MainActivity extends AppCompatActivity
     private BluetoothSocket btSocket  = null;
     private OutputStream outStream = null;
     private InputStream inStream = null;
-    private static final UUID MY_UUID = UUID.fromString("d2ea0fdc-1982-40e1-98e8-9dcd45130b8e");  //这条是蓝牙串口通用的UUID，不要更改
+    private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");  //这条是蓝牙串口通用的UUID，不要更改
     private static String address = "b8:76:3f:ed:d0:a4"; // <==要连接的蓝牙设备MAC地址
     private EditText message;
     private TextView description;
     private BluetoothReceiver mReceiver = new BluetoothReceiver();
     HashMap<String,String> blueMap = new HashMap<String,String>();
-    String objName = "YOGA";
+    String objName = "HC-05";
     private String msg = "我是第?次通话 ";
     private int i = 0;
 
@@ -98,6 +99,8 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 description.setText("前额亮度："+progress+"%");
+                SendStr(partF+progress);
+                Log.d("TAG", "设置前额亮度："+progress);
             }
         });
 
@@ -115,6 +118,8 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 description.setText("头顶亮度："+progress+"%");
+                SendStr(partT+progress);
+                Log.d("TAG", "设置头顶亮度："+progress);
             }
         });
 
@@ -132,6 +137,8 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 description.setText("后枕亮度："+progress+"%");
+                SendStr(partB+progress);
+                Log.d("TAG", "设置后枕亮度："+progress);
             }
         });
 
@@ -156,7 +163,8 @@ public class MainActivity extends AppCompatActivity
                 long[] times = {progress,0};
                 timerTextView.setTimes(times);
                 timerTextView.beginRun();
-                SendStr("time"+progress);
+                SendStr(timeValue+progress);
+                Log.d("TAG", "设置时间："+progress+"分钟");
             }
         });
         //打开，连接蓝牙
@@ -222,6 +230,7 @@ public class MainActivity extends AppCompatActivity
             for(BluetoothDevice device : boundedList) {
                 if(device.getName().contains(objName)) {
                     mBluetoothManager.createConnection(device);
+                    return;
                 }
             }
         }
@@ -234,18 +243,20 @@ public class MainActivity extends AppCompatActivity
                 }
             }
         }
-        Log.d("TAG", "create connection for found devices");
+        Log.v("TAG", "create connection for found devices");
     }
 
     // Function to send Bluetooth message
     public void SendStr(String str) {
         BluetoothDevice targetDevice = null;
+        //获取蓝牙服务
         targetDevice = GetBluetoothDevice(mBluetoothManager);
         if(null == targetDevice) {
             Toast.makeText(getApplicationContext(), "未连接蓝牙设备", Toast.LENGTH_SHORT).show();
             return;
         }
-        mBluetoothManager.writeDataToClientConnection(targetDevice.getAddress(),("来自客户端手机端消息：" + str).getBytes());
+        //发送蓝牙指令
+        mBluetoothManager.writeDataToClientConnection(targetDevice.getAddress(),str.getBytes());
 
     }
 
@@ -258,19 +269,23 @@ public class MainActivity extends AppCompatActivity
         }
         BluetoothDevice targetDevice = null;
         List<BluetoothDevice> boundedList = mBluetoothManager.getBoundedDevices();
+        Log.v("TAG", "绑定的设备：");
         if(null != boundedList) {
             for(BluetoothDevice device : boundedList) {
                 if(device.getName().contains(objName)) {
                     targetDevice = device;
+                    Log.v("TAG", targetDevice.getName());
                     break;
                 }
             }
         }
         List<BluetoothDevice> foundedList = mBluetoothManager.getFoundedDevices();
+        Log.v("TAG", "发现的设备：");
         if(null != foundedList) {
             for(BluetoothDevice device : foundedList) {
                 if(device.getName().contains(objName)) {
                     targetDevice = device;
+                    Log.v("TAG", targetDevice.getName());
                     break;
                 }
             }
