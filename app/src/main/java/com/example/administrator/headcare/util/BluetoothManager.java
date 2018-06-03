@@ -58,7 +58,7 @@ public  class BluetoothManager implements IBluetoothManager {
     //*********************************************************//
     /**蓝牙模块被外面可见时间*/
     private static final int BLUETOOTH_VISIBLE_TIME = 200;
-    private static final String BLUETOOTH_SOCKET_NAME = "BLUETOOTH_CONNECTION";
+    public static final String BLUETOOTH_SOCKET_NAME = "Headcare";
     //系统蓝牙设备帮助类
     private BluetoothAdapter mBluetoothAdapter;
     //监听蓝牙设备的广播
@@ -68,7 +68,7 @@ public  class BluetoothManager implements IBluetoothManager {
     //已绑定的设备列表
     private List<BluetoothDevice> mBoundedDeviceList = new ArrayList<BluetoothDevice>();
     /**判断设备是否匹配目标的接口*/
-    public IBluetoothEventHandler mBluetoothEventHandler;
+//    public IBluetoothEventHandler mBluetoothEventHandler;
     //服务器端Socket，由此获取服务端BluetoothSocket
     private BluetoothServerSocket mBluetoothServerSocket;
     //作为服务端的socket
@@ -120,7 +120,6 @@ public  class BluetoothManager implements IBluetoothManager {
         }
         //使蓝牙设备可见，方便配对
         BluetoothUtil.makeBluetoothVisible(mContext, BLUETOOTH_VISIBLE_TIME);
-
         return BluetoothErrorCode.RESULT_SUCCESS;
     }
 
@@ -230,7 +229,7 @@ public  class BluetoothManager implements IBluetoothManager {
         }
     }
 
-    private void createClientSocket(BluetoothDevice device) {
+    public void createClientSocket(BluetoothDevice device) {
         int resultCode = IBluetoothEventHandler.RESULT_FAIL;
         BluetoothSocket clientBluetoothSocket = null;
         try {
@@ -247,6 +246,97 @@ public  class BluetoothManager implements IBluetoothManager {
         }
         //对外连接建立后需要开始监听从client链接写入的数据，并返回给外层
         readDataFromClientConnection(device.getAddress());
+    }
+
+    //此方法仅能执行一次，执行多次会在connect处报崩溃
+    private void readDataFromClientConnection(final String deviceAddress) {
+        Log.d(TAG, "readDataFromClientConnection() deviceAddress= " + deviceAddress);
+//        final BluetoothServerSocket serverSocket = null;
+        try {
+            mBluetoothServerSocket  = mBluetoothAdapter.listenUsingInsecureRfcommWithServiceRecord(BLUETOOTH_SOCKET_NAME,UUID_SERVER);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if(null == mClientCommunicateBluetoothSocketMap) {
+            Log.d(TAG, "readDataFromClientConnection()| map is null");
+            return;
+        }
+        final BluetoothSocket clientSocket = mClientCommunicateBluetoothSocketMap.get(deviceAddress);
+        if(null == clientSocket) {
+            Log.d(TAG, "readDataFromClientConnection()| socket is null");
+            return;
+        }
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                InputStream is = null;
+                try {
+                    clientSocket.connect();
+                    byte[] tempData = new byte[256];
+                    is = clientSocket.getInputStream();
+                    while(null != is) {
+                        //is的 read是阻塞的，来了数据才往下走
+                        int bytesRead = is.read(tempData);
+                        if(bytesRead == -1) {
+                            continue;
+                        }
+                        if(null != mBluetoothEventHandler) {
+                            mBluetoothEventHandler.onReadServerSocketData(clientSocket.getRemoteDevice(), tempData, bytesRead);
+                        }
+                    }
+                } catch (Exception e) {
+                    Log.d(TAG, "readDataFromServerConnection()| read data failed", e);
+                } finally {
+                    //不能加is.close()，否则下次读失败
+                }
+            }
+        });
+        thread.start();
+    }
+
+    @Override
+    public void writeDataToClientConnection(final String deviceAddress, final byte[] data) {
+        Log.d(TAG, "writeDataToClientConnection() deviceAddress= " + deviceAddress);
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                OutputStream os = null;
+                try {
+                    if(null == mClientCommunicateBluetoothSocketMap) {
+                        return;
+                    }
+                    final BluetoothSocket clientSocket = mClientCommunicateBluetoothSocketMap.get(deviceAddress);
+                    if(null == clientSocket) {
+                        return;
+                    }
+                    if (!BluetoothUtil.isConnectionBegined(deviceAddress)) {
+                        //标识已经开始了connect动作
+                        //TODO 这里有个缺陷，如果这时候还没有触发建立连接操作，则以后都建立不了了
+                        BluetoothUtil.notifyBeginConnection(deviceAddress);
+                        //如果调用两次connect,会抛出异常
+                        clientSocket.connect();
+                        Log.d(TAG, "readDataFromClientConnection()| connect success");
+                    }
+                    //可能第一个线程卡在Connect方法内，第二个线程运行到此处了
+                    //TODO 增加同步控制，否则两个线程会都运行到此处使用里面的outputStream
+                    if (!clientSocket.isConnected())
+                    {
+                        clientSocket.connect();
+                    }
+                    os = clientSocket.getOutputStream();
+                    os.write(data);
+                    os.flush();
+                    Log.d(TAG, "writeDataToClientConnection ()| success");
+                } catch (Exception e) {
+                    Log.d(TAG, "writeDataToClientConnection ()| write data failed", e);
+                } finally {
+                  if(null != os) {
+
+                  }
+                }
+            }
+        });
+        thread.start();
     }
 
     //标识是否触发过对服务Socket的读监听，已经开启读监听则不再开启
@@ -317,107 +407,6 @@ public  class BluetoothManager implements IBluetoothManager {
                     Log.d(TAG, "writeDataToServerConnection()| write data failed", e);
                 } finally {
                     //不能加os.close()，否则对方读失败
-                }
-            }
-        });
-        thread.start();
-    }
-
-    //此方法仅能执行一次，执行多次会在connect处报崩溃
-    private void readDataFromClientConnection(final String deviceAddress) {
-        Log.d(TAG, "readDataFromClientConnection() deviceAddress= " + deviceAddress);
-
-        if(null == mClientCommunicateBluetoothSocketMap) {
-            Log.d(TAG, "readDataFromClientConnection()| map is null");
-            return;
-        }
-        final BluetoothSocket clientSocket = mClientCommunicateBluetoothSocketMap.get(deviceAddress);
-        if(null == clientSocket) {
-            Log.d(TAG, "readDataFromClientConnection()| socket is null");
-            return;
-        }
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                InputStream is = null;
-                try {
-                    // 如果调用两次connect,会抛出异常
-                    clientSocket.connect();
-                    Log.d(TAG, "readDataFromClientConnection()| connect success");
-//                    is = clientSocket.getInputStream();
-//                    byte[] tempData = new byte[256];
-//                    while (true) {
-//                        // is的 read是阻塞的，来了数据就往下走
-//                        int bytesRead = is.read();
-//                        if (bytesRead == -1) {
-//                            continue;
-//                        }
-//                        if (null != mBluetoothEventHandler) {
-//                            mBluetoothEventHandler.onReadClientSocketData(clientSocket.getRemoteDevice(), tempData, bytesRead);
-//                        }
-//                    }
-                } catch (Exception e) {
-                    Log.d(TAG, "readDataFromClientConnection()|read data failed", e);
-                } finally {
-                    //不能调用is.close()，否则下次再读就失败了
-                }
-            }
-        });
-        thread.start();
-    }
-
-    @Override
-    public void writeDataToClientConnection(final String deviceAddress, final byte[] data) {
-        Log.d(TAG, "writeDataToClientConnection() deviceAddress= " + deviceAddress);
-        Thread thread = new Thread(new Runnable() {
-
-            @Override
-            public void run() {
-                OutputStream os = null;
-                try {
-                    if(null == mClientCommunicateBluetoothSocketMap) {
-                        return;
-                    }
-                    final BluetoothSocket clientSocket = mClientCommunicateBluetoothSocketMap.get(deviceAddress);
-                    if(null == clientSocket) {
-                        return;
-                    }
-                    if (!BluetoothUtil.isConnectionBegined(deviceAddress)) {
-                        //标识已经开始了connect动作
-                        //TODO 这里有个缺陷，如果这时候还没有触发建立连接操作，则以后都建立不了了
-                        BluetoothUtil.notifyBeginConnection(deviceAddress);
-                        //如果调用两次connect,会抛出异常
-                        clientSocket.connect();
-                        Log.d(TAG, "readDataFromClientConnection()| connect success");
-                    }
-                    //可能第一个线程卡在Connect方法内，第二个线程运行到此处了
-//                    while(BluetoothUtil.isConnected(clientSocket)) {
-//                        Thread.sleep(300);
-//                    }
-                    //TODO 增加同步控制，否则两个线程会都运行到此处使用里面的outputStream
-                    if (!clientSocket.isConnected())
-                    {
-                        clientSocket.isConnected();
-                    }
-                    os = clientSocket.getOutputStream();
-                    os.write(data);
-                    os.flush();
-//                    os.close();
-//                    clientSocket.close();
-                    Log.d(TAG, "writeDataToClientConnection ()| success");
-                } catch (Exception e) {
-                    Log.d(TAG, "writeDataToClientConnection ()| write data failed", e);
-                } finally {
-//                  if(null != os) {
-////                    这里要注意, 不能close, 否则对方收不到消息
-////                    报错:java.io.IOException: bt socket closed, read return: -1
-//                      try {
-//                          //os.close();
-//                          os = null;
-//                      } catch (Exception e) {
-//                          Log.d(TAG, "writeDataToClientConnection ()| close outputstream failed", e);
-//                      }
-//                  }
                 }
             }
         });
@@ -563,4 +552,69 @@ public  class BluetoothManager implements IBluetoothManager {
         mClientCommunicateBluetoothSocketMap = null;
         mBluetoothServerSocket = null;
     }
+
+    public IBluetoothEventHandler mBluetoothEventHandler = new IBluetoothEventHandler() {
+        @Override
+        public void onDeviceFound(BluetoothDevice device) {
+            Log.d(TAG, "onDeviceFound() device= " + device);
+            if (null == device) {
+                return;
+            }
+        }
+        @Override
+        public void onServerSocketConnectResult(int resultCode) {
+            Log.d(TAG, "onDeviceFound() device= " );
+
+        }
+
+        @Override
+        public void onClientSocketConnectResult(final BluetoothDevice device, int resultCode) {
+            Log.d(TAG, "onDeviceFound() device= " );
+            if (null == device || RESULT_SUCCESS != resultCode) {
+                return;
+            }
+        }
+
+        @Override
+        public void onReadServerSocketData(BluetoothDevice remoteDevice, byte[] data, int length) {
+            String newData = new String(data);
+            Log.d(TAG, "onReadServerSocketData: "+newData);
+        }
+
+        @Override
+        public boolean isDeviceMatch(BluetoothDevice device) {
+            if (null == device) {
+                return false;
+            }
+            if ("小米手机".equals(device.getName())) {
+                return true;
+            }
+            if ("AOSP".equals(device.getName())) {
+                return true;
+            }
+            return false;
+        }
+
+
+        @Override
+        public void onReadClientSocketData(BluetoothDevice remoteDevice, byte[] data, int length) {
+            Log.d(TAG, "onDeviceFound() device= " );
+
+        }
+
+        @Override
+        public void onBluetoothOn() {
+            mInstance.searchAvailableDevice();
+            //modified 连接设备改为由用户去触发
+//          mBluetoothManager.connectBoundedDevice();
+        }
+
+        @Override
+        public void onBluetoothOff() {
+            // TODO Auto-generated method stub
+            Log.d(TAG, "onDeviceFound() device= " );
+
+        }
+    };
+
 }

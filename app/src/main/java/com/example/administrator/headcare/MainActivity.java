@@ -169,6 +169,8 @@ public class MainActivity extends AppCompatActivity
         });
         //打开，连接蓝牙
         startActivityForResult();
+//        mBluetoothManager.mBluetoothEventHandler=mBluetoothManager.mBluetoothEventHandler;
+        mBluetoothManager.setBluetoothEventHandler(mBluetoothManager.mBluetoothEventHandler);
     }
 
     @Override
@@ -228,7 +230,7 @@ public class MainActivity extends AppCompatActivity
         List<BluetoothDevice> boundedList = mBluetoothManager.getBoundedDevices();
         if(null != boundedList) {
             for(BluetoothDevice device : boundedList) {
-                if(device.getName().contains(objName)) {
+                if(device.getName().contains(mBluetoothManager.BLUETOOTH_SOCKET_NAME)) {
                     mBluetoothManager.createConnection(device);
                     return;
                 }
@@ -238,7 +240,7 @@ public class MainActivity extends AppCompatActivity
         List<BluetoothDevice> foundedList = mBluetoothManager.getFoundedDevices();
         if(null != foundedList) {
             for(BluetoothDevice device : foundedList) {
-                if(device.getName().contains(objName)) {
+                if(device.getName().contains(mBluetoothManager.BLUETOOTH_SOCKET_NAME)) {
                     mBluetoothManager.createConnection(device);
                 }
             }
@@ -272,7 +274,7 @@ public class MainActivity extends AppCompatActivity
         Log.v("TAG", "绑定的设备：");
         if(null != boundedList) {
             for(BluetoothDevice device : boundedList) {
-                if(device.getName().contains(objName)) {
+                if(device.getName().contains(mBluetoothManager.BLUETOOTH_SOCKET_NAME)) {
                     targetDevice = device;
                     Log.v("TAG", targetDevice.getName());
                     break;
@@ -283,7 +285,7 @@ public class MainActivity extends AppCompatActivity
         Log.v("TAG", "发现的设备：");
         if(null != foundedList) {
             for(BluetoothDevice device : foundedList) {
-                if(device.getName().contains(objName)) {
+                if(device.getName().contains(mBluetoothManager.BLUETOOTH_SOCKET_NAME)) {
                     targetDevice = device;
                     Log.v("TAG", targetDevice.getName());
                     break;
@@ -297,42 +299,8 @@ public class MainActivity extends AppCompatActivity
     public  void  openPart(View v)
     {
 //        SendStr("helloWord");
-
     }
 
-//    //刷新蓝牙
-//    public  void  reflashBlue(View v)
-//    {
-////        SendStr("helloWord");
-//        startActivityForResult();
-//
-//    }
-
-//    //使本机蓝牙在300秒内可被搜索
-//    private void ensureDiscoverable() {
-//        if (adapter.getScanMode() != BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
-//            Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-//            discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
-//            startActivity(discoverableIntent);
-//        }
-//        //当蓝牙设备没有启动成功时返回false
-//        boolean result = adapter.startDiscovery();
-//        //获得已配对的远程蓝牙设备的集合
-//        blueList.clear();
-//        blueMap.clear();
-//        Set<BluetoothDevice> devices = adapter.getBondedDevices();
-////        if(devices.size()>0){
-////            for(Iterator<BluetoothDevice> it = devices.iterator(); it.hasNext();){
-////                BluetoothDevice device = (BluetoothDevice)it.next();
-////                //打印出远程蓝牙设备的物理地址
-////                blueList.add(device.getName());
-////                blueMap.put(device.getName(),device.getAddress());
-////            }
-////        }else{
-////            show("还没有已配对的远程蓝牙设备！");
-////        }
-////        showChoose(blueList.toArray(new String[blueList.size()]));
-//        }
 
     private void  show( String message)
     {
