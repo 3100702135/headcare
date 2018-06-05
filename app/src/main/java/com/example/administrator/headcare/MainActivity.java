@@ -21,11 +21,13 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.chipsen.bleservice.BluetoothLeService;
+import com.example.administrator.headcare.toolBars.LD_WaveView;
 import com.example.administrator.headcare.util.BluetoothManager;
 import com.example.administrator.headcare.util.BluetoothReceiver;
 import com.example.administrator.headcare.util.TimerTextView;
@@ -63,7 +65,11 @@ public class MainActivity extends AppCompatActivity
     private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");  //这条是蓝牙串口通用的UUID，不要更改
     private static String address = "b8:76:3f:ed:d0:a4"; // <==要连接的蓝牙设备MAC地址
     private EditText message;
-    private TextView description;
+    public TextView description;//显示提示控件
+    public LD_WaveView waveViewCircle;//电量显示控件
+    public TextView textViewTemp ;//温度显示控件
+    public ImageButton blueButton ;//蓝牙刷新按钮
+
     private BluetoothReceiver mReceiver = new BluetoothReceiver();
     HashMap<String,String> blueMap = new HashMap<String,String>();
     String objName = "HC-05";
@@ -84,6 +90,10 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         description=(TextView)findViewById(R.id.description);
+
+        waveViewCircle = (LD_WaveView) findViewById(R.id.waveViewCircle);//电量显示控件
+        textViewTemp = findViewById(R.id.textViewTemp);//温度显示控件
+        blueButton = (ImageButton)findViewById(R.id.blueButton);//蓝牙刷新按钮
 
         VerticalSeekBar verticalSeekbarF= (VerticalSeekBar) findViewById(R.id.verticalSeekbarF);//拿到前额控件实例
         verticalSeekbarF.setMax(100);//为控件设置大小
@@ -165,6 +175,9 @@ public class MainActivity extends AppCompatActivity
                 timerTextView.beginRun();
                 SendStr(timeValue+progress);
                 Log.d("TAG", "设置时间："+progress+"分钟");
+
+                textViewTemp.setText(progress+"℃");
+                waveViewCircle.setmProgress(progress);
             }
         });
         //打开，连接蓝牙
@@ -207,8 +220,8 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
         if (id == R.id.nav_camera) {
             // Handle the camera action
-            Intent intent = new Intent(this,testActivity.class);
-            startActivity(intent);
+//            Intent intent = new Intent(this,testActivity.class);
+//            startActivity(intent);
         } else if (id == R.id.nav_gallery) {
 
         } else if (id == R.id.nav_slideshow) {
@@ -218,8 +231,8 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_share) {
 
         } else if (id == R.id.nav_send) {
-            Intent intent = new Intent(this,WaveActivity.class);
-            startActivity(intent);
+//            Intent intent = new Intent(this,WaveActivity.class);
+//            startActivity(intent);
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -230,6 +243,7 @@ public class MainActivity extends AppCompatActivity
         //获得BluetoothAdapter对象，该API是android 2.0开始支持的
 //        adapter = BluetoothAdapter.getDefaultAdapter();
         mBluetoothManager.enableBluetooth();
+        mBluetoothManager.mainActivity=this;
         List<BluetoothDevice> boundedList = mBluetoothManager.getBoundedDevices();
         if(null != boundedList) {
             for(BluetoothDevice device : boundedList) {

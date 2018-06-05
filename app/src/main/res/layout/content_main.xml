@@ -187,7 +187,7 @@
         app:wave_color="@android:color/holo_green_light" />
 
     <TextView
-        android:id="@+id/textView6"
+        android:id="@+id/textViewTemp"
         android:layout_width="40dp"
         android:layout_height="30dp"
         android:layout_marginBottom="8dp"
@@ -207,7 +207,7 @@
         app:layout_constraintVertical_bias="0.355" />
 
     <ImageButton
-        android:id="@+id/imageButton"
+        android:id="@+id/blueButton"
         android:layout_width="34dp"
         android:layout_height="39dp"
         android:layout_marginBottom="8dp"
@@ -216,6 +216,7 @@
         android:layout_marginRight="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
+        android:onClick="startActivityForResult"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"

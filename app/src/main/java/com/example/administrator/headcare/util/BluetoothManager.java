@@ -10,6 +10,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
 
+import com.example.administrator.headcare.MainActivity;
+
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -78,6 +80,7 @@ public  class BluetoothManager implements IBluetoothManager {
 
     //当前正在进行绑定操作的设备列表
     private CopyOnWriteArrayList<String> mBoundingDeviceFlagList = new CopyOnWriteArrayList<String>();
+    public MainActivity mainActivity ;
 
     @Override
     public void setBluetoothEventHandler(IBluetoothEventHandler eventHandler) {
@@ -578,6 +581,9 @@ public  class BluetoothManager implements IBluetoothManager {
         @Override
         public void onReadServerSocketData(BluetoothDevice remoteDevice, byte[] data, int length) {
             String newData = new String(data);
+            mainActivity.description.setText("同步温度："+newData);
+            mainActivity.textViewTemp.setText(newData+"℃");
+            traslateString(newData);//界面赋值
             Log.d(TAG, "onReadServerSocketData: "+newData);
         }
 
@@ -616,5 +622,31 @@ public  class BluetoothManager implements IBluetoothManager {
 
         }
     };
+
+    private String traslateString(String strData)
+    {
+        if (strData ==null && strData.length()==7)
+        {
+            return "";
+        }
+        String strFlag ="";
+        String strValue ="";
+        strFlag = strData.substring(0,4);//截取前五位标志位
+        strValue = strData.substring(5,6);//截取后两位数据位
+        switch (strFlag)
+        {
+            case BluetoothStrEnum.tempA:
+                mainActivity.description.setText("同步温度："+strValue);
+                mainActivity.textViewTemp.setText(strValue+"℃");
+                break;
+            case BluetoothStrEnum.power:
+                    mainActivity.description.setText("同步电量："+strValue);
+                    mainActivity.waveViewCircle.setmProgress(Integer.getInteger(strValue));
+                    break;
+             default:
+                     break;
+        }
+        return strValue;
+    }
 
 }
