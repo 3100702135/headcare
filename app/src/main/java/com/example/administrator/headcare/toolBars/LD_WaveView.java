@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LD_WaveView extends View {
-    private int mProgress;//进度
+    private int mProgress=51;//进度
     private int mTimeStep = 10;//时间间隔
     private int mSpeed = 5;//波单次移动的距离
     private int mViewHeight;//视图宽高
