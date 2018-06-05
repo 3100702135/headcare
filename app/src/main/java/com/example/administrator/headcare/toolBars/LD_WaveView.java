@@ -98,7 +98,7 @@ public class LD_WaveView extends View {
         mTextPaint=new Paint();
         mTextPaint.setColor(Color.RED);
         mTextPaint.setTextAlign(Paint.Align.CENTER);
-        mTextPaint.setTextSize(48);
+        mTextPaint.setTextSize(32);
 
 
         //圆环画笔
@@ -209,7 +209,7 @@ public class LD_WaveView extends View {
         canvas.drawPath(mPath,mPaint);
         Rect rect = new Rect();
 
-        String progress=String.format("%d%%",mProgress);
+        String progress=String.format("电量：%d%%",mProgress);
         mTextPaint.getTextBounds(progress,0,progress.length(), rect);
         int textHeight = rect.height();
         if (mProgress>=50)//如果进度达到50 颜色变为白色，没办法啊，进度在中间 不变颜色看不到
