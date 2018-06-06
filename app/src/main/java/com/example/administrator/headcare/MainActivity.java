@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
+import android.view.MenuInflater;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -82,6 +83,16 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+//        fab.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+//                        .setAction("Action", null).show();
+//            }
+//        });
+
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -89,11 +100,11 @@ public class MainActivity extends AppCompatActivity
         toggle.syncState();
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-        description=(TextView)findViewById(R.id.description);
 
+        description=(TextView)findViewById(R.id.description);
         waveViewCircle = (LD_WaveView) findViewById(R.id.waveViewCircle);//电量显示控件
         textViewTemp = findViewById(R.id.textViewTemp);//温度显示控件
-        blueButton = (ImageButton)findViewById(R.id.blueButton);//蓝牙刷新按钮
+//        blueButton = (ImageButton)findViewById(R.id.blueButton);//蓝牙刷新按钮
 
         VerticalSeekBar verticalSeekbarF= (VerticalSeekBar) findViewById(R.id.verticalSeekbarF);//拿到前额控件实例
         verticalSeekbarF.setMax(100);//为控件设置大小
@@ -186,7 +197,7 @@ public class MainActivity extends AppCompatActivity
         mBluetoothManager.setBluetoothEventHandler(mBluetoothManager.mBluetoothEventHandler);
     }
 
-    @Override
+        @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
@@ -199,17 +210,17 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-//        getMenuInflater().inflate(R.menu.main, menu);
+        getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        //noinspection SimplifiableIfStatement
-//        if (id == R.id.blueItem) {
-//            return true;
-//        }
+        if (id == R.id.blueFresh) {
+            startActivityForResult();
+            return true;
+        }
         return super.onOptionsItemSelected(item);
     }
 
