@@ -253,27 +253,35 @@ public class MainActivity extends AppCompatActivity
     public void startActivityForResult() {
         //获得BluetoothAdapter对象，该API是android 2.0开始支持的
 //        adapter = BluetoothAdapter.getDefaultAdapter();
-        mBluetoothManager.enableBluetooth();
-        mBluetoothManager.mainActivity=this;
-        List<BluetoothDevice> boundedList = mBluetoothManager.getBoundedDevices();
-        if(null != boundedList) {
-            for(BluetoothDevice device : boundedList) {
-                if(device.getName().contains(mBluetoothManager.BLUETOOTH_SOCKET_NAME)) {
-                    mBluetoothManager.createConnection(device);
-                    return;
+        try{
+            mBluetoothManager.enableBluetooth();
+            mBluetoothManager.mainActivity=this;
+            List<BluetoothDevice> boundedList = mBluetoothManager.getBoundedDevices();
+            if(null != boundedList) {
+                for(BluetoothDevice device : boundedList) {
+                    if(device.getName().contains(mBluetoothManager.BLUETOOTH_SOCKET_NAME)) {
+                        mBluetoothManager.createConnection(device);
+                        return;
+                    }
                 }
             }
-        }
-        Log.d("TAG", "create connection for bounded devices");
-        List<BluetoothDevice> foundedList = mBluetoothManager.getFoundedDevices();
-        if(null != foundedList) {
-            for(BluetoothDevice device : foundedList) {
-                if(device.getName().contains(mBluetoothManager.BLUETOOTH_SOCKET_NAME)) {
-                    mBluetoothManager.createConnection(device);
+            Log.d("TAG", "create connection for bounded devices");
+            List<BluetoothDevice> foundedList = mBluetoothManager.getFoundedDevices();
+            if(null != foundedList) {
+                for(BluetoothDevice device : foundedList) {
+                    if(device.getName().contains(mBluetoothManager.BLUETOOTH_SOCKET_NAME)) {
+                        mBluetoothManager.createConnection(device);
+                    }
                 }
             }
+            Log.v("TAG", "create connection for found devices");
         }
-        Log.v("TAG", "create connection for found devices");
+        catch (Exception e)
+        {
+            Log.v("TAG", "create connection for found devices Exception");
+            this.show("连接蓝牙异常，请重试！");
+        }
+
     }
 
     // Function to send Bluetooth message
@@ -330,7 +338,7 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    private void  show( String message)
+    public void  show( String message)
     {
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle("提示")//设置对话框的标题

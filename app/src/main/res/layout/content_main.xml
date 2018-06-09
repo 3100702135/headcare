@@ -14,7 +14,7 @@
         android:id="@+id/verticalSeekbarB"
         style="@style/CustomSeekbarStyle"
         android:layout_width="80dp"
-        android:layout_height="200dp"
+        android:layout_height="158dp"
         android:layout_marginEnd="16dp"
         android:layout_marginRight="16dp"
         android:layout_marginTop="30dp"
@@ -25,7 +25,7 @@
         android:id="@+id/verticalSeekbarF"
         style="@style/CustomSeekbarStyle"
         android:layout_width="80dp"
-        android:layout_height="200dp"
+        android:layout_height="162dp"
         android:layout_marginLeft="16dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="30dp"
@@ -36,7 +36,7 @@
         android:id="@+id/verticalSeekbarT"
         style="@style/CustomSeekbarStyle"
         android:layout_width="80dp"
-        android:layout_height="200dp"
+        android:layout_height="164dp"
         android:layout_marginEnd="50dp"
         android:layout_marginLeft="50dp"
         android:layout_marginRight="50dp"
@@ -50,22 +50,23 @@
 
     <TextView
         android:id="@+id/textViewF"
-        android:layout_width="60dp"
-        android:layout_height="28dp"
+        android:layout_width="71dp"
+        android:layout_height="21dp"
         android:layout_marginBottom="8dp"
-        android:layout_marginLeft="26dp"
-        android:layout_marginStart="26dp"
+        android:layout_marginLeft="24dp"
+        android:layout_marginStart="24dp"
         android:layout_marginTop="5dp"
         android:text="前额亮度"
-        android:textSize="14sp"
+        android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/verticalSeekbarF" />
+        app:layout_constraintTop_toBottomOf="@+id/verticalSeekbarF"
+        app:layout_constraintVertical_bias="0.0" />
 
     <TextView
         android:id="@+id/textViewT"
-        android:layout_width="60dp"
-        android:layout_height="30dp"
+        android:layout_width="80dp"
+        android:layout_height="21dp"
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="50dp"
         android:layout_marginLeft="50dp"
@@ -74,25 +75,28 @@
         android:layout_marginTop="5dp"
         android:text="头顶亮度"
         android:textColorLink="@android:color/holo_green_dark"
-        android:textSize="14sp"
+        android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/textViewB"
+        app:layout_constraintHorizontal_bias="0.807"
         app:layout_constraintStart_toEndOf="@+id/textViewF"
-        app:layout_constraintTop_toBottomOf="@+id/verticalSeekbarT" />
+        app:layout_constraintTop_toBottomOf="@+id/verticalSeekbarT"
+        app:layout_constraintVertical_bias="0.0" />
 
     <TextView
         android:id="@+id/textViewB"
-        android:layout_width="60dp"
-        android:layout_height="30dp"
+        android:layout_width="67dp"
+        android:layout_height="22dp"
         android:layout_marginBottom="8dp"
-        android:layout_marginEnd="26dp"
-        android:layout_marginRight="26dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginRight="16dp"
         android:layout_marginTop="5dp"
         android:text="后枕亮度"
-        android:textSize="14sp"
+        android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/verticalSeekbarB" />
+        app:layout_constraintTop_toBottomOf="@+id/verticalSeekbarB"
+        app:layout_constraintVertical_bias="0.0" />
 
     <TextView
         android:id="@+id/description"
@@ -119,8 +123,8 @@
 
     <com.example.administrator.headcare.util.TimerTextView
         android:id="@+id/timer_text_view"
-        android:layout_width="178dp"
-        android:layout_height="20dp"
+        android:layout_width="173dp"
+        android:layout_height="21dp"
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="16dp"
         android:layout_marginRight="16dp"
@@ -128,10 +132,10 @@
         android:gravity="center_horizontal"
         android:text="剩余时间："
         android:textSize="14sp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/textLine"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.361" />
+        app:layout_constraintVertical_bias="0.886" />
 
     <SeekBar
         android:id="@+id/seekBarTime"
@@ -145,12 +149,12 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="60dp"
         android:max="30"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/textLine"
         app:layout_constraintEnd_toStartOf="@+id/timer_text_view"
-        app:layout_constraintHorizontal_bias="0.4"
+        app:layout_constraintHorizontal_bias="0.47"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.315" />
+        app:layout_constraintVertical_bias="0.919" />
 
     <TextView
         android:id="@+id/textLine"
@@ -178,12 +182,11 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="50dp"
         android:background="@android:color/background_light"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.1"
+        app:layout_constraintBottom_toTopOf="@+id/seekBarTime"
+        app:layout_constraintEnd_toStartOf="@+id/textView2"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.057"
+        app:layout_constraintVertical_bias="0.55"
         app:wave_circle="true"
         app:wave_color="@android:color/holo_green_light" />
 
@@ -200,29 +203,29 @@
         android:text="20℃"
         android:textColor="@color/colorAccent"
         android:textSize="18sp"
-        app:layout_constraintBottom_toTopOf="@+id/verticalSeekbarB"
+        app:layout_constraintBottom_toTopOf="@+id/timer_text_view"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.917"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintHorizontal_bias="0.351"
+        app:layout_constraintStart_toEndOf="@+id/imageView2"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.335" />
+        app:layout_constraintVertical_bias="0.588" />
 
     <ImageView
         android:id="@+id/imageView2"
-        android:layout_width="39dp"
-        android:layout_height="wrap_content"
+        android:layout_width="53dp"
+        android:layout_height="101dp"
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/timer_text_view"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.762"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintHorizontal_bias="0.368"
+        app:layout_constraintStart_toEndOf="@+id/textView2"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.164"
+        app:layout_constraintVertical_bias="0.646"
         app:srcCompat="@drawable/temp" />
 
     <TextView
@@ -237,10 +240,9 @@
         android:layout_marginTop="8dp"
         android:background="@android:color/holo_blue_bright"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/textLine"
-        app:layout_constraintHorizontal_bias="0.496"
-        app:layout_constraintStart_toStartOf="@+id/textLine"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.143" />
+        app:layout_constraintVertical_bias="0.14" />
 
 </android.support.constraint.ConstraintLayout>

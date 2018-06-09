@@ -8,7 +8,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Looper;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.example.administrator.headcare.MainActivity;
 
@@ -252,7 +254,7 @@ public  class BluetoothManager implements IBluetoothManager {
     }
 
     //此方法仅能执行一次，执行多次会在connect处报崩溃
-    private void readDataFromClientConnection(final String deviceAddress) {
+    private void readDataFromClientConnection(final String deviceAddress){
         Log.d(TAG, "readDataFromClientConnection() deviceAddress= " + deviceAddress);
 //        final BluetoothServerSocket serverSocket = null;
         try {
@@ -269,6 +271,7 @@ public  class BluetoothManager implements IBluetoothManager {
             Log.d(TAG, "readDataFromClientConnection()| socket is null");
             return;
         }
+        Looper.prepare();
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -289,11 +292,13 @@ public  class BluetoothManager implements IBluetoothManager {
                     }
                 } catch (Exception e) {
                     Log.d(TAG, "readDataFromServerConnection()| read data failed", e);
+                    mainActivity.description.setText("连接蓝牙异常，请重试！");
                 } finally {
                     //不能加is.close()，否则下次读失败
                 }
             }
         });
+        Looper.loop();
         thread.start();
     }
 
@@ -487,6 +492,11 @@ public  class BluetoothManager implements IBluetoothManager {
                         mBluetoothEventHandler.onBluetoothOff();
                     }
                 }
+                else if(BluetoothAdapter.STATE_TURNING_OFF == state) {
+                    if(null != mBluetoothEventHandler) {
+                        mBluetoothEventHandler.onBluetoothOff();
+                    }
+                }
             } else if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 if(null == device) {
@@ -612,7 +622,7 @@ public  class BluetoothManager implements IBluetoothManager {
         public void onBluetoothOn() {
             mInstance.searchAvailableDevice();
             //modified 连接设备改为由用户去触发
-//          mBluetoothManager.connectBoundedDevice();
+          connectBoundedDevice();
         }
 
         @Override
