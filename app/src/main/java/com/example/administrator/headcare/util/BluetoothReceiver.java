@@ -8,7 +8,7 @@ import android.util.Log;
 
 public class BluetoothReceiver extends BroadcastReceiver{
     String pin = "1234";  //此处为你要连接的蓝牙设备的初始密钥，一般为1234或0000
-    String objName = "HC-05";
+    String objName = "Headcare";
     public BluetoothReceiver() {
 
     }

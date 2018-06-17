@@ -4,12 +4,18 @@ import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.Uri;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
+import com.example.administrator.headcare.util.BluetoothStrEnum;
+
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 import android.view.MenuInflater;
 import android.view.View;
@@ -31,12 +37,16 @@ import com.chipsen.bleservice.BluetoothLeService;
 import com.example.administrator.headcare.toolBars.LD_WaveView;
 import com.example.administrator.headcare.util.BluetoothManager;
 import com.example.administrator.headcare.util.BluetoothReceiver;
+import com.example.administrator.headcare.util.ClsUtils;
+import com.example.administrator.headcare.util.IBluetoothManager;
+import com.example.administrator.headcare.util.IBluetoothManager.IBluetoothEventHandler;
 import com.example.administrator.headcare.util.TimerTextView;
 import com.example.administrator.headcare.util.VerticalSeekBar;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,51 +57,45 @@ import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
-    private  String powerValue;//电量值
-    private  String timeValue="timeV";//设置的照射时间
-    private  String lightValue;//设置的照射亮度
-    private  String partF ="partF";//前区域
-    private  String partT  ="partT";//上区域
-    private  String partB ="partB";//后区域
-    private  String items[];
-    private  String clickAddress;
+    private String powerValue;//电量值
+    private String temp;//温度值
+    private String lightValue;//设置的照射亮度
+    private String items[];
+    private String clickAddress;
 
     ArrayList<String> blueList = new ArrayList<String>();
     private BluetoothAdapter adapter = null;
     private BluetoothManager mBluetoothManager = new BluetoothManager(this);
     private BluetoothDevice device = null;
-    private BluetoothSocket btSocket  = null;
+    private BluetoothSocket btSocket = null;
     private OutputStream outStream = null;
     private InputStream inStream = null;
     private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");  //这条是蓝牙串口通用的UUID，不要更改
-    private static String address = "b8:76:3f:ed:d0:a4"; // <==要连接的蓝牙设备MAC地址
     private EditText message;
     public TextView description;//显示提示控件
     public LD_WaveView waveViewCircle;//电量显示控件
-    public TextView textViewTemp ;//温度显示控件
-    public ImageButton blueButton ;//蓝牙刷新按钮
+    public TextView textViewTemp;//温度显示控件
+    public ImageButton blueButton;//蓝牙刷新按钮
 
     private BluetoothReceiver mReceiver = new BluetoothReceiver();
-    HashMap<String,String> blueMap = new HashMap<String,String>();
-    String objName = "HC-05";
-    private String msg = "我是第?次通话 ";
+    HashMap<String, String> blueMap = new HashMap<String, String>();
     private int i = 0;
+    private final String PERMISSION_REQUEST_COARSE_LOCATION = "\n";
+    public String receiveString = "";
+    Handler handler = new Handler();
+
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-//        fab.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
-//            }
-//        });
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            if (this.checkSelfPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION}, 0);
+            }
+        }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -100,104 +104,109 @@ public class MainActivity extends AppCompatActivity
         toggle.syncState();
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-
-        description=(TextView)findViewById(R.id.description);
+        description = (TextView) findViewById(R.id.description);
         waveViewCircle = (LD_WaveView) findViewById(R.id.waveViewCircle);//电量显示控件
         textViewTemp = findViewById(R.id.textViewTemp);//温度显示控件
-//        blueButton = (ImageButton)findViewById(R.id.blueButton);//蓝牙刷新按钮
 
-        VerticalSeekBar verticalSeekbarF= (VerticalSeekBar) findViewById(R.id.verticalSeekbarF);//拿到前额控件实例
+        VerticalSeekBar verticalSeekbarF = (VerticalSeekBar) findViewById(R.id.verticalSeekbarF);//拿到前额控件实例
         verticalSeekbarF.setMax(100);//为控件设置大小
         verticalSeekbarF.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 description.setText("亮度生效");
             }
+
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
                 description.setText("开始设置");
             }
+
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                description.setText("前额亮度："+progress+"%");
-                SendStr(partF+progress);
-                Log.d("TAG", "设置前额亮度："+progress);
+                description.setText("前额亮度：" + progress + "%");
+                SendStr(BluetoothStrEnum.partF + progress);
+                Log.d("TAG", "设置前额亮度：" + progress);
             }
         });
 
-        VerticalSeekBar verticalSeekbarT= (VerticalSeekBar) findViewById(R.id.verticalSeekbarT);//拿到前额控件实例
+        VerticalSeekBar verticalSeekbarT = (VerticalSeekBar) findViewById(R.id.verticalSeekbarT);//拿到前额控件实例
         verticalSeekbarT.setMax(100);//为控件设置大小
         verticalSeekbarT.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 description.setText("亮度生效");
             }
+
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
                 description.setText("开始设置");
             }
+
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                description.setText("头顶亮度："+progress+"%");
-                SendStr(partT+progress);
-                Log.d("TAG", "设置头顶亮度："+progress);
+                description.setText("头顶亮度：" + progress + "%");
+                SendStr(BluetoothStrEnum.partM + progress);
+                Log.d("TAG", "设置头顶亮度：" + progress);
             }
         });
 
-        VerticalSeekBar verticalSeekbarB= (VerticalSeekBar) findViewById(R.id.verticalSeekbarB);//拿到前额控件实例
+        VerticalSeekBar verticalSeekbarB = (VerticalSeekBar) findViewById(R.id.verticalSeekbarB);//拿到前额控件实例
         verticalSeekbarB.setMax(100);//为控件设置大小
         verticalSeekbarB.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 description.setText("亮度生效");
             }
+
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
                 description.setText("开始设置");
             }
+
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                description.setText("后枕亮度："+progress+"%");
-                SendStr(partB+progress);
-                Log.d("TAG", "设置后枕亮度："+progress);
+                description.setText("后枕亮度：" + progress + "%");
+                SendStr(BluetoothStrEnum.partB + progress);
+                Log.d("TAG", "设置后枕亮度：" + progress);
             }
         });
 
         //初始化倒计时控件
-        final TimerTextView timerTextView =findViewById(R.id.timer_text_view);
-        SeekBar seekBarTime= (SeekBar) findViewById(R.id.seekBarTime);//拿到控件实例
+        final TimerTextView timerTextView = findViewById(R.id.timer_text_view);
+        SeekBar seekBarTime = (SeekBar) findViewById(R.id.seekBarTime);//拿到控件实例
         seekBarTime.setMax(50);//为控件设置大小
         seekBarTime.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 description.setText("设置生效");
             }
+
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
                 description.setText("开始设置");
             }
+
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                timerTextView.stopRun();
                 timerTextView.destroyDrawingCache();
-                description.setText("设置时间："+progress+"分钟后，关闭灯光");
-                long[] times = {progress,0};
+                description.setText("设置时间：" + progress + "分钟后，关闭灯光");
+                long[] times = {progress, 0};
+                timerTextView.stopRun();
                 timerTextView.setTimes(times);
                 timerTextView.beginRun();
-                SendStr(timeValue+progress);
-                Log.d("TAG", "设置时间："+progress+"分钟");
+                SendStr(BluetoothStrEnum.timeValue + progress);
+                Log.d("TAG", "设置时间：" + progress + "分钟");
 
-                textViewTemp.setText(progress+"℃");
+                textViewTemp.setText(progress + "℃");
                 waveViewCircle.setmProgress(progress);
             }
         });
         //打开，连接蓝牙
         startActivityForResult();
-//        mBluetoothManager.mBluetoothEventHandler=mBluetoothManager.mBluetoothEventHandler;
         mBluetoothManager.setBluetoothEventHandler(mBluetoothManager.mBluetoothEventHandler);
     }
 
-        @Override
+    @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
@@ -229,21 +238,26 @@ public class MainActivity extends AppCompatActivity
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-//            Intent intent = new Intent(this,testActivity.class);
-//            startActivity(intent);
-        } else if (id == R.id.nav_gallery) {
+        if (id == R.id.nav_gallery) //脱友经验
+        {
+            Intent intent = new Intent();
+            intent.setClass(MainActivity.this, useCourse.class);
+            MainActivity.this.startActivity(intent);
+        } else if (id == R.id.nav_slideshow)//使用教程
+        {
+            Intent intent = new Intent();
+            intent.setClass(MainActivity.this, useCourse.class);
+            MainActivity.this.startActivity(intent);
 
-        } else if (id == R.id.nav_slideshow) {
+        } else if (id == R.id.nav_manage)//使用设置
+        {
 
-        } else if (id == R.id.nav_manage) {
+        } else if (id == R.id.nav_share)//分享
+        {
 
-        } else if (id == R.id.nav_share) {
+        } else if (id == R.id.nav_send)//发送
+        {
 
-        } else if (id == R.id.nav_send) {
-//            Intent intent = new Intent(this,WaveActivity.class);
-//            startActivity(intent);
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -253,13 +267,13 @@ public class MainActivity extends AppCompatActivity
     public void startActivityForResult() {
         //获得BluetoothAdapter对象，该API是android 2.0开始支持的
 //        adapter = BluetoothAdapter.getDefaultAdapter();
-        try{
+        try {
             mBluetoothManager.enableBluetooth();
-            mBluetoothManager.mainActivity=this;
+            mBluetoothManager.mainActivity = this;
             List<BluetoothDevice> boundedList = mBluetoothManager.getBoundedDevices();
-            if(null != boundedList) {
-                for(BluetoothDevice device : boundedList) {
-                    if(device.getName().contains(mBluetoothManager.BLUETOOTH_SOCKET_NAME)) {
+            if (null != boundedList) {
+                for (BluetoothDevice device : boundedList) {
+                    if (device.getName().contains(mBluetoothManager.BLUETOOTH_SOCKET_NAME)) {
                         mBluetoothManager.createConnection(device);
                         return;
                     }
@@ -267,17 +281,15 @@ public class MainActivity extends AppCompatActivity
             }
             Log.d("TAG", "create connection for bounded devices");
             List<BluetoothDevice> foundedList = mBluetoothManager.getFoundedDevices();
-            if(null != foundedList) {
-                for(BluetoothDevice device : foundedList) {
-                    if(device.getName().contains(mBluetoothManager.BLUETOOTH_SOCKET_NAME)) {
+            if (null != foundedList) {
+                for (BluetoothDevice device : foundedList) {
+                    if (device.getName().contains(mBluetoothManager.BLUETOOTH_SOCKET_NAME)) {
                         mBluetoothManager.createConnection(device);
                     }
                 }
             }
             Log.v("TAG", "create connection for found devices");
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             Log.v("TAG", "create connection for found devices Exception");
             this.show("连接蓝牙异常，请重试！");
         }
@@ -289,28 +301,26 @@ public class MainActivity extends AppCompatActivity
         BluetoothDevice targetDevice = null;
         //获取蓝牙服务
         targetDevice = GetBluetoothDevice(mBluetoothManager);
-        if(null == targetDevice) {
+        if (null == targetDevice) {
             Toast.makeText(getApplicationContext(), "未连接蓝牙设备", Toast.LENGTH_SHORT).show();
             return;
         }
         //发送蓝牙指令
-        mBluetoothManager.writeDataToClientConnection(targetDevice.getAddress(),str.getBytes());
+        mBluetoothManager.writeDataToServerConnection(targetDevice.getAddress(), str.getBytes());
 
     }
 
     //刷新蓝牙
-    public  BluetoothDevice  GetBluetoothDevice(BluetoothManager mBluetoothManager)
-    {
-        if(mBluetoothManager==null)
-        {
+    public BluetoothDevice GetBluetoothDevice(BluetoothManager mBluetoothManager) {
+        if (mBluetoothManager == null) {
             return null;
         }
         BluetoothDevice targetDevice = null;
         List<BluetoothDevice> boundedList = mBluetoothManager.getBoundedDevices();
         Log.v("TAG", "绑定的设备：");
-        if(null != boundedList) {
-            for(BluetoothDevice device : boundedList) {
-                if(device.getName().contains(mBluetoothManager.BLUETOOTH_SOCKET_NAME)) {
+        if (null != boundedList) {
+            for (BluetoothDevice device : boundedList) {
+                if (device.getName().contains(mBluetoothManager.BLUETOOTH_SOCKET_NAME)) {
                     targetDevice = device;
                     Log.v("TAG", targetDevice.getName());
                     break;
@@ -319,9 +329,9 @@ public class MainActivity extends AppCompatActivity
         }
         List<BluetoothDevice> foundedList = mBluetoothManager.getFoundedDevices();
         Log.v("TAG", "发现的设备：");
-        if(null != foundedList) {
-            for(BluetoothDevice device : foundedList) {
-                if(device.getName().contains(mBluetoothManager.BLUETOOTH_SOCKET_NAME)) {
+        if (null != foundedList) {
+            for (BluetoothDevice device : foundedList) {
+                if (device.getName().contains(mBluetoothManager.BLUETOOTH_SOCKET_NAME)) {
                     targetDevice = device;
                     Log.v("TAG", targetDevice.getName());
                     break;
@@ -332,14 +342,12 @@ public class MainActivity extends AppCompatActivity
     }
 
     //打开灯板
-    public  void  openPart(View v)
-    {
+    public void openPart(View v) {
 //        SendStr("helloWord");
     }
 
 
-    public void  show( String message)
-    {
+    public void show(String message) {
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle("提示")//设置对话框的标题
                 .setMessage(message)//设置对话框的内容
@@ -362,70 +370,145 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    private void  showChoose(final String items[])
-    {
-//        final String items[] = {"我是Item一", "我是Item二", "我是Item三", "我是Item四"};
-        HashMap<String, String> map = new HashMap<String, String>();
-        AlertDialog dialog = new AlertDialog.Builder(this)
-//                .setIcon(R.mipmap.icon)//设置标题的图片
-                .setTitle("已搜索到的蓝牙设备")//设置对话框的标题
-                .setSingleChoiceItems(items, items.length-1, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Toast.makeText(MainActivity.this, items[which], Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                })
-                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        description.setText(items[which+1]);
-                        clickAddress =blueMap.get(items[which+1]);
-                        dialog.dismiss();
-                        adapter.cancelDiscovery();
-                        new BlueThread().start();
-                    }
-                }).create();
-        dialog.show();
-    }
+//    private void  showChoose(final String items[])
+//    {
+////        final String items[] = {"我是Item一", "我是Item二", "我是Item三", "我是Item四"};
+//        HashMap<String, String> map = new HashMap<String, String>();
+//        AlertDialog dialog = new AlertDialog.Builder(this)
+////                .setIcon(R.mipmap.icon)//设置标题的图片
+//                .setTitle("已搜索到的蓝牙设备")//设置对话框的标题
+//                .setSingleChoiceItems(items, items.length-1, new DialogInterface.OnClickListener() {
+//                    @Override
+//                    public void onClick(DialogInterface dialog, int which) {
+//                        Toast.makeText(MainActivity.this, items[which], Toast.LENGTH_SHORT).show();
+//                    }
+//                })
+//                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+//                    @Override
+//                    public void onClick(DialogInterface dialog, int which) {
+//                        dialog.dismiss();
+//                    }
+//                })
+//                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+//                    @Override
+//                    public void onClick(DialogInterface dialog, int which) {
+//                        description.setText(items[which+1]);
+//                        clickAddress =blueMap.get(items[which+1]);
+//                        dialog.dismiss();
+//                        adapter.cancelDiscovery();
+//                        new BlueThread().start();
+//                    }
+//                }).create();
+//        dialog.show();
+//    }
 
-    public class BlueThread extends Thread {
-        //继承Thread类，并改写其run方法
-        public void run(){
-            BluetoothDevice device = adapter.getRemoteDevice(clickAddress);
+
+    public IBluetoothEventHandler mBluetoothEventHandler = new IBluetoothEventHandler() {
+
+        @Override
+        public boolean isDeviceMatch(BluetoothDevice device) {
+            return false;
+        }
+
+        @Override
+        public void onServerSocketConnectResult(int resultCode) {
+
+        }
+
+        @Override
+        public void onDeviceFound(BluetoothDevice device) {
+
+        }
+
+        @Override
+        public void onClientSocketConnectResult(BluetoothDevice device, int resultCode) {
+
+        }
+
+        @Override
+        public void onReadServerSocketData(BluetoothDevice remoteDevice, byte[] data, int length) {
+
+        }
+
+        @Override
+        public void onBluetoothOn() {
+
+        }
+
+        @Override
+        public void onBluetoothOff() {
+
+        }
+
+        /*读取服务端数据*/
+        @Override
+        public void reflash( byte[] data, int length) {
+            String receiveStr = new String(data);
             try {
-                btSocket = device.createRfcommSocketToServiceRecord(MY_UUID);
-                btSocket.connect();
-                Log.e("error", "ON RESUME: BT connection established, data transfer link open.");
-            } catch (IOException e) {
-                try {
-                    try {
-                        btSocket =(BluetoothSocket) device.getClass().getMethod("createRfcommSocket", new Class[] {int.class}).invoke(device,1);
-                        btSocket.connect();
-                    } catch (IllegalAccessException e1) {
-                        e1.printStackTrace();
-                    } catch (InvocationTargetException e1) {
-                        e1.printStackTrace();
-                    } catch (NoSuchMethodException e1) {
-                        e1.printStackTrace();
-                    }
-                } catch (IOException e2) {
-                    try {
-                        btSocket.close();
-                    } catch (IOException e1) {
-                        e1.printStackTrace();
-                        Log.e("error", "关闭蓝牙异常", e2);
-                    }
-                    Log.e("error", "连接蓝牙异常", e2);
+                receiveStr = new String(data, 0, length, "utf-8");
+                if(receiveStr.length()<3)
+                {
+                    receiveString=receiveString+receiveStr;
                 }
+                if (receiveString.length()>=3)
+                {
+                    String strFlag ="";
+                    String strValue ="";
+                    strFlag = receiveString.substring(0,1);//截取前五位标志位
+                    strValue = receiveString.substring(1,3);//截取中间两位数据位
+                    switch (strFlag)
+                    {
+                        case BluetoothStrEnum.temp:
+                            temp=strValue;
+                            break;
+                        case BluetoothStrEnum.power:
+                            powerValue=strValue;
+                            break;
+                        default:
+                            break;
+                    }
+                    receiveString="";
+                    new Thread(){
+                        public void run(){
+                            handler.post(runnableUi);
+                        }
+                    }.start();
+                }
+
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
             }
         }
-    }
+    };
 
+    // 构建Runnable对象，在runnable中更新界面
+    Runnable   runnableUi=new  Runnable(){
+        @Override
+        public void run() {
+            try{
+                //更新界面
+                if (temp!=null && !temp.equals(""))
+                {
+                    description.setText("同步温度："+temp+"℃");
+                    textViewTemp.setText(temp+"℃");
+                    Toast.makeText(MainActivity.this, "同步温度："+temp+"℃", Toast.LENGTH_SHORT).show();
+
+                }
+                if (powerValue!=null && !powerValue.equals(""))
+                {
+                    description.setText("同步电量："+powerValue+"%");
+                    waveViewCircle.setmProgress(Integer.parseInt(powerValue));
+                    Toast.makeText(MainActivity.this, "同步电量："+powerValue+"%", Toast.LENGTH_SHORT).show();
+                }
+
+            }
+            catch (Exception e)
+            {
+                Log.d("TAG", "runnableUi()| runnableUi failed", e);
+            }
+
+        }
+
+    };
 
 }

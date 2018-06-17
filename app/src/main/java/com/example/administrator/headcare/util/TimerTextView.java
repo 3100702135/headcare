@@ -45,6 +45,8 @@ public class TimerTextView extends AppCompatTextView implements Runnable{
 
     public void stopRun(){
         this.run = false;
+        mmin=0;
+        msecond=0;
     }
 
 
@@ -52,10 +54,11 @@ public class TimerTextView extends AppCompatTextView implements Runnable{
     public void run() {
         //标示已经启动
         if(run){
+            postDelayed(this, 1000);
+//            sleep();
             ComputeTime();
             String strTime=  "剩余时间："+mmin+"分钟:"+msecond+"秒";
             this.setText(strTime);
-            postDelayed(this, 1000);
         }else {
             removeCallbacks(this);
         }

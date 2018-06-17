@@ -22,9 +22,9 @@ public interface IBluetoothManager {
 
     public void createConnection(BluetoothDevice device);
 
-    public void writeDataToServerConnection(byte[] data);
+    public void writeDataToServerConnection(String deviceAddress,byte[] data);
 
-    public void writeDataToClientConnection(String deviceAddress, byte[] data);
+    public void readDataFromServerConnection(String deviceAddress);
 
     public void endConnection();
 
@@ -44,10 +44,10 @@ public interface IBluetoothManager {
 
         public void onReadServerSocketData(BluetoothDevice remoteDevice, byte[] data, int length);
 
-        public void onReadClientSocketData(BluetoothDevice remoteDevice, byte[] data, int length);
-
         public void onBluetoothOn();
 
         public void onBluetoothOff();
+
+        public void reflash( byte[] data, int length);
     }
 }

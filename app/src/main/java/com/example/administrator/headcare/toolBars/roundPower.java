@@ -90,7 +90,7 @@ public class roundPower extends FrameLayout {
 
         if (mFlag == Status.RUNNING) {
             if (mScaledBitmap == null) {
-                mBitmap = BitmapFactory.decodeResource(getContext().getResources(), R.drawable.sun);
+                mBitmap = BitmapFactory.decodeResource(getContext().getResources(), R.drawable.temp);
                 mScaledBitmap = Bitmap.createScaledBitmap(mBitmap, mBitmap.getWidth(), getHeight(), false);
                 mBitmap.recycle();
                 mBitmap = null;

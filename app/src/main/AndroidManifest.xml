@@ -2,6 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.administrator.headcare">
 
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -20,7 +26,8 @@
             </intent-filter>
         </activity>
 
-<!--        <activity
+        <!--
+            <activity
             android:name=".testActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
@@ -40,19 +47,24 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>-->
+        </activity>
+        -->
 
-        <receiver android:name="com.example.administrator.headcare.util.BluetoothReceiver" >
+
+        <!--
+            <receiver android:name="com.example.administrator.headcare.util.BluetoothReceiver" >
             <intent-filter android:priority="1000">
                 <action android:name="android.bluetooth.device.action.PAIRING_REQUEST"/>
                 <action android:name="android.bluetooth.device.action.FOUND" />
+                <action android:name="com.android.action.NNN" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </receiver>
+        -->
+        <activity
+            android:name=".useCourse"
+            android:label="@string/title_activity_use_course"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
-    <uses-permission android:name="android.permission.BLUETOOTH" />
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-
 
 </manifest>
