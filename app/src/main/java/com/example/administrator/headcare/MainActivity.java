@@ -75,7 +75,7 @@ public class MainActivity extends AppCompatActivity
     public TextView description;//显示提示控件
     public LD_WaveView waveViewCircle;//电量显示控件
     public TextView textViewTemp;//温度显示控件
-    public ImageButton blueButton;//蓝牙刷新按钮
+    public  MenuItem blueFresh;//蓝牙刷新按钮
 
     private BluetoothReceiver mReceiver = new BluetoothReceiver();
     HashMap<String, String> blueMap = new HashMap<String, String>();
@@ -96,9 +96,6 @@ public class MainActivity extends AppCompatActivity
                 requestPermissions(new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION}, 0);
             }
         }
-
-//        Toolbar toolbar1 =  findViewById(R.id.blueFresh);
-//        toolbar1.setTitle("yilianjie");
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -203,9 +200,7 @@ public class MainActivity extends AppCompatActivity
                 waveViewCircle.setmProgress(progress);
             }
         });
-        //打开，连接蓝牙
-        startActivityForResult();
-        mBluetoothManager.setBluetoothEventHandler(mBluetoothManager.mBluetoothEventHandler);
+
     }
 
     @Override
@@ -222,14 +217,19 @@ public class MainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
+        blueFresh=  menu.findItem(R.id.blueFresh);
+        //打开，连接蓝牙
+        startActivityForResult();
+        mBluetoothManager.setBluetoothEventHandler(mBluetoothManager.mBluetoothEventHandler);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.blueFresh) {
+        if (id == R.id.blueFresh && blueFresh.getTitle().equals("刷新蓝牙")) {
             startActivityForResult();
+            mBluetoothManager.setBluetoothEventHandler(mBluetoothManager.mBluetoothEventHandler);
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -424,7 +424,17 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         public void onClientSocketConnectResult(BluetoothDevice device, int resultCode) {
-
+            Log.d("TAG", "蓝牙连接 " );
+            if (null == device || RESULT_SUCCESS != resultCode) {
+                return;
+            }
+            else
+            {
+                if(blueFresh!=null)
+                {
+                    blueFresh.setTitle("已连接");
+                }
+            }
         }
 
         @Override

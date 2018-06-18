@@ -233,7 +233,7 @@ public  class BluetoothManager implements IBluetoothManager {
             Log.d(TAG, "createClientSocket()| error happened", ex);
         }
         if (null != mBluetoothEventHandler) {
-            mBluetoothEventHandler.onClientSocketConnectResult(device, resultCode);
+            mainActivity.mBluetoothEventHandler.onClientSocketConnectResult(device, resultCode);
         }
         //对外连接建立后需要开始监听从client链接写入的数据，并返回给外层
         readDataFromServerConnection(device.getAddress());
