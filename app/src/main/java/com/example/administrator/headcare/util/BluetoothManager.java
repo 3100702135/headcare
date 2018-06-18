@@ -311,8 +311,14 @@ public  class BluetoothManager implements IBluetoothManager {
                     if (!mClientBluetoothSocket.isConnected()) {
                         mClientBluetoothSocket.connect();
                     }
+                    byte[] tempData = new byte[4];
+                    tempData[0]=data[0];
+                    tempData[1]=data[1];
+                    tempData[2]=data[2];
+                    tempData[3]=(byte)(data[0]+data[1]+data[2]);
+//                    data[3]=(byte)(data[0]+data[1]+data[2]);
                     os = mClientBluetoothSocket.getOutputStream();
-                    os.write(data);
+                    os.write(tempData);
                     os.flush();
                     Log.d(TAG, "writeDataToClientConnection ()| success");
                 } catch (Exception e) {

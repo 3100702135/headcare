@@ -97,6 +97,8 @@ public class MainActivity extends AppCompatActivity
             }
         }
 
+//        Toolbar toolbar1 =  findViewById(R.id.blueFresh);
+//        toolbar1.setTitle("yilianjie");
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -446,11 +448,11 @@ public class MainActivity extends AppCompatActivity
             String receiveStr = new String(data);
             try {
                 receiveStr = new String(data, 0, length, "utf-8");
-                if(receiveStr.length()<3)
+                if(receiveStr.length()<4)
                 {
                     receiveString=receiveString+receiveStr;
                 }
-                if (receiveString.length()>=3)
+                if (receiveString.length()>=4)
                 {
                     String strFlag ="";
                     String strValue ="";
@@ -467,12 +469,12 @@ public class MainActivity extends AppCompatActivity
                         default:
                             break;
                     }
-                    receiveString="";
                     new Thread(){
                         public void run(){
                             handler.post(runnableUi);
                         }
                     }.start();
+                    receiveString="";
                 }
 
             } catch (UnsupportedEncodingException e) {
@@ -486,6 +488,7 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void run() {
             try{
+                description.setText("接收数据："+receiveString);
                 //更新界面
                 if (temp!=null && !temp.equals(""))
                 {
