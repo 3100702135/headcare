@@ -14,7 +14,7 @@
         android:id="@+id/verticalSeekbarB"
         style="@style/CustomSeekbarStyle"
         android:layout_width="80dp"
-        android:layout_height="158dp"
+        android:layout_height="160dp"
         android:layout_marginEnd="16dp"
         android:layout_marginRight="16dp"
         android:layout_marginTop="30dp"
@@ -25,7 +25,7 @@
         android:id="@+id/verticalSeekbarF"
         style="@style/CustomSeekbarStyle"
         android:layout_width="80dp"
-        android:layout_height="162dp"
+        android:layout_height="160dp"
         android:layout_marginLeft="16dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="30dp"
@@ -36,7 +36,7 @@
         android:id="@+id/verticalSeekbarT"
         style="@style/CustomSeekbarStyle"
         android:layout_width="80dp"
-        android:layout_height="164dp"
+        android:layout_height="160dp"
         android:layout_marginEnd="50dp"
         android:layout_marginLeft="50dp"
         android:layout_marginRight="50dp"
@@ -50,12 +50,13 @@
 
     <TextView
         android:id="@+id/textViewF"
-        android:layout_width="71dp"
-        android:layout_height="21dp"
+        android:layout_width="80dp"
+        android:layout_height="20dp"
         android:layout_marginBottom="8dp"
         android:layout_marginLeft="16dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="5dp"
+        android:gravity="center_vertical|center_horizontal|center"
         android:text="前额亮度"
         android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -66,13 +67,14 @@
     <TextView
         android:id="@+id/textViewT"
         android:layout_width="80dp"
-        android:layout_height="21dp"
+        android:layout_height="20dp"
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="50dp"
         android:layout_marginLeft="50dp"
         android:layout_marginRight="50dp"
         android:layout_marginStart="50dp"
         android:layout_marginTop="5dp"
+        android:gravity="center"
         android:text="头顶亮度"
         android:textColorLink="@android:color/holo_green_dark"
         android:textSize="12sp"
@@ -85,12 +87,13 @@
 
     <TextView
         android:id="@+id/textViewB"
-        android:layout_width="67dp"
-        android:layout_height="22dp"
+        android:layout_width="80dp"
+        android:layout_height="20dp"
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="16dp"
         android:layout_marginRight="16dp"
         android:layout_marginTop="5dp"
+        android:gravity="center"
         android:text="后枕亮度"
         android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -123,25 +126,25 @@
 
     <com.example.administrator.headcare.util.TimerTextView
         android:id="@+id/timer_text_view"
-        android:layout_width="173dp"
-        android:layout_height="21dp"
+        android:layout_width="170dp"
+        android:layout_height="23dp"
         android:layout_marginBottom="20dp"
         android:layout_marginEnd="16dp"
         android:layout_marginRight="16dp"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="50dp"
         android:gravity="center_horizontal"
         android:text="剩余时间："
         android:textSize="14sp"
         app:layout_constraintBottom_toTopOf="@+id/textLine"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.886" />
+        app:layout_constraintVertical_bias="0.877" />
 
     <SeekBar
         android:id="@+id/seekBarTime"
         style="@style/CustomSeekbarStyle"
-        android:layout_width="167dp"
-        android:layout_height="41dp"
+        android:layout_width="170dp"
+        android:layout_height="40dp"
         android:layout_marginBottom="20dp"
         android:layout_marginEnd="8dp"
         android:layout_marginLeft="8dp"
@@ -169,8 +172,10 @@
         android:background="@android:color/holo_blue_bright"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.537" />
 
     <com.example.administrator.headcare.toolBars.LD_WaveView
         android:id="@+id/waveViewCircle"

@@ -311,15 +311,17 @@ public  class BluetoothManager implements IBluetoothManager {
                     if (!mClientBluetoothSocket.isConnected()) {
                         mClientBluetoothSocket.connect();
                     }
-                    byte[] tempData = new byte[4];
-                    tempData[0]=data[0];
-                    tempData[1]=data[1];
-                    tempData[2]=data[2];
-                    tempData[3]=(byte)(data[0]+data[1]+data[2]);
-//                    data[3]=(byte)(data[0]+data[1]+data[2]);
+                    byte[] tempData = new byte[32];
+                    for(int i=0;i<data.length;i++)
+                    {
+                        tempData[i]=data[i];
+                        tempData[i+1]=(byte)(data[i]+tempData[i+1]);
+                    }
                     os = mClientBluetoothSocket.getOutputStream();
                     os.write(tempData);
                     os.flush();
+                    Thread.sleep(100);
+                    tempData = new byte[32];
                     Log.d(TAG, "writeDataToClientConnection ()| success");
                 } catch (Exception e) {
                     Log.d(TAG, "writeDataToClientConnection ()| write data failed", e);
@@ -400,14 +402,17 @@ public  class BluetoothManager implements IBluetoothManager {
                 if (BluetoothAdapter.STATE_ON == state) {
                     if (null != mBluetoothEventHandler) {
                         mBluetoothEventHandler.onBluetoothOn();
+                        mainActivity.mBluetoothEventHandler.onBluetoothOn();
                     }
                 } else if (BluetoothAdapter.STATE_OFF == state) {
                     if (null != mBluetoothEventHandler) {
                         mBluetoothEventHandler.onBluetoothOff();
+                        mainActivity.mBluetoothEventHandler.onBluetoothOff();
                     }
                 } else if (BluetoothAdapter.STATE_TURNING_OFF == state) {
                     if (null != mBluetoothEventHandler) {
                         mBluetoothEventHandler.onBluetoothOff();
+                        mainActivity.mBluetoothEventHandler.onBluetoothOff();
                     }
                 }
             } else if (BluetoothDevice.ACTION_FOUND.equals(action)) {

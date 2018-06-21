@@ -59,6 +59,8 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     private String powerValue;//电量值
     private String temp;//温度值
+    private String timeValue;//剩余照射时间
+
     private String lightValue;//设置的照射亮度
     private String items[];
     private String clickAddress;
@@ -75,6 +77,8 @@ public class MainActivity extends AppCompatActivity
     public TextView description;//显示提示控件
     public LD_WaveView waveViewCircle;//电量显示控件
     public TextView textViewTemp;//温度显示控件
+    public TimerTextView timerTextView;//剩余时间显示
+    public SeekBar seekBarTime ;//照射时间设定
     public  MenuItem blueFresh;//蓝牙刷新按钮
 
     private BluetoothReceiver mReceiver = new BluetoothReceiver();
@@ -107,7 +111,7 @@ public class MainActivity extends AppCompatActivity
         waveViewCircle = (LD_WaveView) findViewById(R.id.waveViewCircle);//电量显示控件
         textViewTemp = findViewById(R.id.textViewTemp);//温度显示控件
 
-        VerticalSeekBar verticalSeekbarF = (VerticalSeekBar) findViewById(R.id.verticalSeekbarF);//拿到前额控件实例
+        final VerticalSeekBar verticalSeekbarF = (VerticalSeekBar) findViewById(R.id.verticalSeekbarF);//拿到前额控件实例
         verticalSeekbarF.setMax(100);//为控件设置大小
         verticalSeekbarF.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -122,13 +126,18 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if(progress==100)
+                {
+                    verticalSeekbarF.setProgress(99);
+                    progress=99;
+                }
                 description.setText("前额亮度：" + progress + "%");
                 SendStr(BluetoothStrEnum.partF + progress);
                 Log.d("TAG", "设置前额亮度：" + progress);
             }
         });
 
-        VerticalSeekBar verticalSeekbarT = (VerticalSeekBar) findViewById(R.id.verticalSeekbarT);//拿到前额控件实例
+        final VerticalSeekBar verticalSeekbarT = (VerticalSeekBar) findViewById(R.id.verticalSeekbarT);//拿到前额控件实例
         verticalSeekbarT.setMax(100);//为控件设置大小
         verticalSeekbarT.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -143,13 +152,18 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if(progress==100)
+                {
+                    verticalSeekbarT.setProgress(99);
+                    progress=99;
+                }
                 description.setText("头顶亮度：" + progress + "%");
                 SendStr(BluetoothStrEnum.partM + progress);
                 Log.d("TAG", "设置头顶亮度：" + progress);
             }
         });
 
-        VerticalSeekBar verticalSeekbarB = (VerticalSeekBar) findViewById(R.id.verticalSeekbarB);//拿到前额控件实例
+        final VerticalSeekBar verticalSeekbarB = (VerticalSeekBar) findViewById(R.id.verticalSeekbarB);//拿到前额控件实例
         verticalSeekbarB.setMax(100);//为控件设置大小
         verticalSeekbarB.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -164,6 +178,11 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if(progress==100)
+                {
+                    verticalSeekbarB.setProgress(99);
+                    progress=99;
+                }
                 description.setText("后枕亮度：" + progress + "%");
                 SendStr(BluetoothStrEnum.partB + progress);
                 Log.d("TAG", "设置后枕亮度：" + progress);
@@ -171,9 +190,9 @@ public class MainActivity extends AppCompatActivity
         });
 
         //初始化倒计时控件
-        final TimerTextView timerTextView = findViewById(R.id.timer_text_view);
-        SeekBar seekBarTime = (SeekBar) findViewById(R.id.seekBarTime);//拿到控件实例
-        seekBarTime.setMax(50);//为控件设置大小
+        timerTextView = findViewById(R.id.timer_text_view);
+        seekBarTime = (SeekBar) findViewById(R.id.seekBarTime);//拿到控件实例
+        seekBarTime.setMax(35);//为控件设置大小
         seekBarTime.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
@@ -188,6 +207,10 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 timerTextView.destroyDrawingCache();
+                if(progress<5)
+                {
+                    verticalSeekbarB.setProgress(5);
+                }
                 description.setText("设置时间：" + progress + "分钟后，关闭灯光");
                 long[] times = {progress, 0};
                 timerTextView.stopRun();
@@ -430,7 +453,7 @@ public class MainActivity extends AppCompatActivity
             }
             else
             {
-                if(blueFresh!=null)
+               if(blueFresh!=null)
                 {
                     blueFresh.setTitle("已连接");
                 }
@@ -444,12 +467,14 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         public void onBluetoothOn() {
-
+            description.setText("蓝牙已打开");
+            blueFresh.setTitle("刷新蓝牙");
         }
 
         @Override
         public void onBluetoothOff() {
-
+            description.setText("蓝牙已断开");
+            blueFresh.setTitle("刷新蓝牙");
         }
 
         /*读取服务端数据*/
@@ -476,6 +501,9 @@ public class MainActivity extends AppCompatActivity
                         case BluetoothStrEnum.power:
                             powerValue=strValue;
                             break;
+                        case BluetoothStrEnum.timeValue:
+                            timeValue=strValue;
+                            break;
                         default:
                             break;
                     }
@@ -498,6 +526,7 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void run() {
             try{
+//                SendStr("E"+powerValue);
                 description.setText("接收数据："+receiveString);
                 //更新界面
                 if (temp!=null && !temp.equals(""))
@@ -512,6 +541,17 @@ public class MainActivity extends AppCompatActivity
                     description.setText("同步电量："+powerValue+"%");
                     waveViewCircle.setmProgress(Integer.parseInt(powerValue));
                     Toast.makeText(MainActivity.this, "同步电量："+powerValue+"%", Toast.LENGTH_SHORT).show();
+                }
+                if (timeValue!=null && !timeValue.equals(""))
+                {
+                    timerTextView = findViewById(R.id.timer_text_view);
+                    description.setText("同步照射时间："+timeValue+"分钟");
+                    seekBarTime.setProgress(Integer.parseInt(powerValue));
+                    long[] times = {Integer.parseInt(powerValue), 0};
+                    timerTextView.stopRun();
+                    timerTextView.setTimes(times);
+                    timerTextView.beginRun();
+                    Toast.makeText(MainActivity.this, "同步照射时间："+powerValue+"分钟", Toast.LENGTH_SHORT).show();
                 }
 
             }
