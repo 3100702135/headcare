@@ -218,9 +218,6 @@ public class MainActivity extends AppCompatActivity
                 timerTextView.beginRun();
                 SendStr(BluetoothStrEnum.timeValue + progress);
                 Log.d("TAG", "设置时间：" + progress + "分钟");
-
-                textViewTemp.setText(progress + "℃");
-                waveViewCircle.setmProgress(progress);
             }
         });
 
@@ -483,16 +480,16 @@ public class MainActivity extends AppCompatActivity
             String receiveStr = new String(data);
             try {
                 receiveStr = new String(data, 0, length, "utf-8");
-                if(receiveStr.length()<4)
-                {
-                    receiveString=receiveString+receiveStr;
-                }
-                if (receiveString.length()>=4)
+//                if(receiveStr.length()<4)
+//                {
+//                    receiveString=receiveString+receiveStr;
+//                }
+                if (receiveStr.length()>=4)
                 {
                     String strFlag ="";
                     String strValue ="";
-                    strFlag = receiveString.substring(0,1);//截取前五位标志位
-                    strValue = receiveString.substring(1,3);//截取中间两位数据位
+                    strFlag = receiveStr.substring(0,1);//截取前五位标志位
+                    strValue = receiveStr.substring(1,3);//截取中间两位数据位
                     switch (strFlag)
                     {
                         case BluetoothStrEnum.temp:
@@ -544,15 +541,24 @@ public class MainActivity extends AppCompatActivity
                 }
                 if (timeValue!=null && !timeValue.equals(""))
                 {
-                    timerTextView = findViewById(R.id.timer_text_view);
-                    description.setText("同步照射时间："+timeValue+"分钟");
-                    seekBarTime.setProgress(Integer.parseInt(powerValue));
-                    long[] times = {Integer.parseInt(powerValue), 0};
-                    timerTextView.stopRun();
-                    timerTextView.setTimes(times);
-                    timerTextView.beginRun();
-                    Toast.makeText(MainActivity.this, "同步照射时间："+powerValue+"分钟", Toast.LENGTH_SHORT).show();
+                    if(seekBarTime.getProgress()!=Integer.parseInt(timeValue))
+                    {
+                        if(timerTextView.isRun()==true)
+                        {
+                            timerTextView.stopRun();
+                        }
+                        description.setText("同步照射时间："+timeValue+"分钟");
+                        seekBarTime.setProgress(Integer.parseInt(timeValue));
+                        long[] times = {Integer.parseInt(timeValue), 0};
+                        timerTextView.setTimes(times);
+                        if(timerTextView.isRun()==false)
+                        {
+                            timerTextView.beginRun();
+                        }
+                        Toast.makeText(MainActivity.this, "同步照射时间："+timeValue+"分钟", Toast.LENGTH_SHORT).show();
+                    }
                 }
+
 
             }
             catch (Exception e)

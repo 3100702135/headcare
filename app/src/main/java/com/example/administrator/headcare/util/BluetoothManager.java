@@ -260,17 +260,18 @@ public  class BluetoothManager implements IBluetoothManager {
                     if (!mClientBluetoothSocket.isConnected()) {
                         mClientBluetoothSocket.connect();
                     }
-                    byte[] tempData = new byte[256];
+                    byte[] tempData = new byte[4];
                     is = mClientBluetoothSocket.getInputStream();
                     while(null != is) {
                         //is的 read是阻塞的，来了数据才往下走
-                        int bytesRead = is.read(tempData);
-                        if(bytesRead == -1) {
-                            continue;
+//                        int bytesRead = is.read(tempData);
+                        int readCount = 0; // 已经成功读取的字节的个数
+                        while (readCount < 4) {
+                            readCount += is.read(tempData, readCount, 4 - readCount);
                         }
                         if (null != mBluetoothEventHandler) {
 //                            mBluetoothEventHandler.onReadServerSocketData(mClientBluetoothSocket.getRemoteDevice(), tempData, bytesRead);
-                            mainActivity.mBluetoothEventHandler.reflash(tempData, bytesRead);
+                            mainActivity.mBluetoothEventHandler.reflash(tempData, readCount);
                         }
                     }
                 } catch (Exception e) {
