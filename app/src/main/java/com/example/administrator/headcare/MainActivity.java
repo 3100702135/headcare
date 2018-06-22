@@ -53,6 +53,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity
@@ -77,9 +79,13 @@ public class MainActivity extends AppCompatActivity
     public TextView description;//显示提示控件
     public LD_WaveView waveViewCircle;//电量显示控件
     public TextView textViewTemp;//温度显示控件
-    public TimerTextView timerTextView;//剩余时间显示
+//    public TimerTextView timerTextView;//剩余时间显示
+    public TextView textViewTime;//剩余时间显示
     public SeekBar seekBarTime ;//照射时间设定
     public  MenuItem blueFresh;//蓝牙刷新按钮
+
+    private long  mmin, msecond;//天，小时，分钟，秒
+    private boolean run=false; //是否启动了
 
     private BluetoothReceiver mReceiver = new BluetoothReceiver();
     HashMap<String, String> blueMap = new HashMap<String, String>();
@@ -110,7 +116,7 @@ public class MainActivity extends AppCompatActivity
         description = (TextView) findViewById(R.id.description);
         waveViewCircle = (LD_WaveView) findViewById(R.id.waveViewCircle);//电量显示控件
         textViewTemp = findViewById(R.id.textViewTemp);//温度显示控件
-
+        textViewTime = findViewById(R.id.textViewTime);
         final VerticalSeekBar verticalSeekbarF = (VerticalSeekBar) findViewById(R.id.verticalSeekbarF);//拿到前额控件实例
         verticalSeekbarF.setMax(100);//为控件设置大小
         verticalSeekbarF.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -190,7 +196,7 @@ public class MainActivity extends AppCompatActivity
         });
 
         //初始化倒计时控件
-        timerTextView = findViewById(R.id.timer_text_view);
+//        timerTextView = findViewById(R.id.timer_text_view);
         seekBarTime = (SeekBar) findViewById(R.id.seekBarTime);//拿到控件实例
         seekBarTime.setMax(35);//为控件设置大小
         seekBarTime.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -206,22 +212,58 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                timerTextView.destroyDrawingCache();
-                if(progress<5)
+                if(progress<10)
                 {
-                    verticalSeekbarB.setProgress(5);
+                    verticalSeekbarB.setProgress(10);
+                    progress=10;
                 }
                 description.setText("设置时间：" + progress + "分钟后，关闭灯光");
                 long[] times = {progress, 0};
-                timerTextView.stopRun();
-                timerTextView.setTimes(times);
-                timerTextView.beginRun();
+                mmin = times[0]-1;
+                msecond = 59;
+                if(run)
+                {
+                    timeHandler.removeCallbacks(runnable);
+                    run=false;
+                    runnable.interrupt();
+                }
+                run=true;
+                runnable.run();
                 SendStr(BluetoothStrEnum.timeValue + progress);
                 Log.d("TAG", "设置时间：" + progress + "分钟");
             }
         });
 
     }
+
+    Handler timeHandler = new Handler();
+    // 实现一个Runnable接口处理业务
+    Thread   runnable = new Thread  () {
+        @Override
+        public void run() {
+            if (!run)
+            {
+                timeHandler.removeCallbacks(runnable);
+                return;
+            }
+            msecond--;
+            if (msecond < 0) {
+                mmin--;
+                msecond = 59;
+                if(mmin<0)
+                {
+                    run=false;
+                    timeHandler.removeCallbacks(runnable);
+                    return;
+                }
+            }
+            String strTime=  "剩余时间："+mmin+"分钟:"+msecond+"秒";
+            textViewTime.setText(strTime);
+            timeHandler.postDelayed(this,1000);
+        }
+
+
+    };
 
     @Override
     public void onBackPressed() {
@@ -480,10 +522,6 @@ public class MainActivity extends AppCompatActivity
             String receiveStr = new String(data);
             try {
                 receiveStr = new String(data, 0, length, "utf-8");
-//                if(receiveStr.length()<4)
-//                {
-//                    receiveString=receiveString+receiveStr;
-//                }
                 if (receiveStr.length()>=4)
                 {
                     String strFlag ="";
@@ -539,27 +577,23 @@ public class MainActivity extends AppCompatActivity
                     waveViewCircle.setmProgress(Integer.parseInt(powerValue));
                     Toast.makeText(MainActivity.this, "同步电量："+powerValue+"%", Toast.LENGTH_SHORT).show();
                 }
-                if (timeValue!=null && !timeValue.equals(""))
-                {
-                    if(seekBarTime.getProgress()!=Integer.parseInt(timeValue))
-                    {
-                        if(timerTextView.isRun()==true)
-                        {
-                            timerTextView.stopRun();
-                        }
-                        description.setText("同步照射时间："+timeValue+"分钟");
+                if (timeValue!=null && !timeValue.equals("")) {
+                    if (seekBarTime.getProgress() != Integer.parseInt(timeValue)) {
+                        Toast.makeText(MainActivity.this, "同步设置时间："+timeValue+"分钟", Toast.LENGTH_SHORT).show();
+                        description.setText("设置时间：" + timeValue + "分钟后，关闭灯光");
                         seekBarTime.setProgress(Integer.parseInt(timeValue));
                         long[] times = {Integer.parseInt(timeValue), 0};
-                        timerTextView.setTimes(times);
-                        if(timerTextView.isRun()==false)
-                        {
-                            timerTextView.beginRun();
+                        mmin = times[0] - 1;
+                        msecond = 59;
+                        if (run) {
+                            timeHandler.removeCallbacks(runnable);
+                            run = false;
+                            runnable.interrupt();
                         }
-                        Toast.makeText(MainActivity.this, "同步照射时间："+timeValue+"分钟", Toast.LENGTH_SHORT).show();
+                        run = true;
+                        runnable.run();
                     }
                 }
-
-
             }
             catch (Exception e)
             {
