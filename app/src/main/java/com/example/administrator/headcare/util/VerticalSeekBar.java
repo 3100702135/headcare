@@ -44,7 +44,6 @@ public class VerticalSeekBar extends AppCompatSeekBar {
         if (!isEnabled()) {
             return false;
         }
-
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_MOVE:

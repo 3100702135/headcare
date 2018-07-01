@@ -26,44 +26,14 @@
             </intent-filter>
         </activity>
 
-        <!--
-            <activity
-            android:name=".testActivity"
-            android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
-        <activity
-            android:name=".WaveActivity"
-            android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        -->
-
-
-        <!--
-            <receiver android:name="com.example.administrator.headcare.util.BluetoothReceiver" >
-            <intent-filter android:priority="1000">
-                <action android:name="android.bluetooth.device.action.PAIRING_REQUEST"/>
-                <action android:name="android.bluetooth.device.action.FOUND" />
-                <action android:name="com.android.action.NNN" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </receiver>
-        -->
         <activity
             android:name=".useCourse"
-            android:label="@string/title_activity_use_course"
+            android:label="使用说明书"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
+        <activity
+            android:name=".useBar"
+            android:label="黑可得脱发吧"
             android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 

@@ -53,9 +53,9 @@ public  class BluetoothManager implements IBluetoothManager {
      */
     public String receiveString = "";
     //作为服务端的socket
-    private BluetoothSocket mClientBluetoothSocket;
+    public static BluetoothSocket mClientBluetoothSocket;
     //作为客户端的读取socket
-    private HashMap<String, BluetoothSocket> mClientCommunicateBluetoothSocketMap = new HashMap<String, BluetoothSocket>();
+    public static HashMap<String, BluetoothSocket> mClientCommunicateBluetoothSocketMap = new HashMap<String, BluetoothSocket>();
     //当前正在进行绑定操作的设备列表
     private CopyOnWriteArrayList<String> mBoundingDeviceFlagList = new CopyOnWriteArrayList<String>();
     public MainActivity mainActivity;
@@ -232,11 +232,12 @@ public  class BluetoothManager implements IBluetoothManager {
         } catch (Exception ex) {
             Log.d(TAG, "createClientSocket()| error happened", ex);
         }
+        //对外连接建立后需要开始监听从client链接写入的数据，并返回给外层
+        readDataFromServerConnection(device.getAddress());
+
         if (null != mBluetoothEventHandler) {
             mainActivity.mBluetoothEventHandler.onClientSocketConnectResult(device, resultCode);
         }
-        //对外连接建立后需要开始监听从client链接写入的数据，并返回给外层
-        readDataFromServerConnection(device.getAddress());
     }
 
     //此方法仅能执行一次，执行多次会在connect处报崩溃
@@ -340,27 +341,24 @@ public  class BluetoothManager implements IBluetoothManager {
     @Override
     public void endConnection() {
         Log.d(TAG, "endConnection()");
-
         if (null != mBluetoothAdapter) {
             mBluetoothAdapter.cancelDiscovery();
         }
         try {
             if (null != mClientBluetoothSocket) {
                 mClientBluetoothSocket.close();
-                mClientBluetoothSocket = null;
             }
-            Iterator<Map.Entry<String, BluetoothSocket>> iterator = mClientCommunicateBluetoothSocketMap.entrySet().iterator();
-            while (iterator.hasNext()) {
-                Map.Entry<String, BluetoothSocket> entry = iterator.next();
-                String deviceAddress = entry.getKey();
-                Log.d(TAG, "endConnection()| free socket for :" + deviceAddress);
-                BluetoothSocket clientSocket = entry.getValue();
-                if (null != clientSocket) {
-                    clientSocket.close();
-                    clientSocket = null;
-                }
-            }
-            mClientCommunicateBluetoothSocketMap.clear();
+//            Iterator<Map.Entry<String, BluetoothSocket>> iterator = mClientCommunicateBluetoothSocketMap.entrySet().iterator();
+//            while (iterator.hasNext()) {
+//                Map.Entry<String, BluetoothSocket> entry = iterator.next();
+//                String deviceAddress = entry.getKey();
+//                Log.d(TAG, "endConnection()| free socket for :" + deviceAddress);
+//                BluetoothSocket clientSocket = entry.getValue();
+//                if (null != clientSocket) {
+//                    clientSocket.close();
+//                }
+//            }
+            mClientCommunicateBluetoothSocketMap = new HashMap<String, BluetoothSocket>();;
         } catch (Exception ex) {
             Log.d(TAG, "endConnection() failed", ex);
         }
@@ -403,14 +401,18 @@ public  class BluetoothManager implements IBluetoothManager {
                 if (BluetoothAdapter.STATE_ON == state) {
                     if (null != mBluetoothEventHandler) {
                         mBluetoothEventHandler.onBluetoothOn();
-                        mainActivity.mBluetoothEventHandler.onBluetoothOn();
+                    }
+                }
+                else if (BluetoothAdapter.STATE_TURNING_ON == state) {
+                    if (null != mBluetoothEventHandler) {
+                        mBluetoothEventHandler.onBluetoothOn();
                     }
                 } else if (BluetoothAdapter.STATE_OFF == state) {
                     if (null != mBluetoothEventHandler) {
                         mBluetoothEventHandler.onBluetoothOff();
                         mainActivity.mBluetoothEventHandler.onBluetoothOff();
                     }
-                } else if (BluetoothAdapter.STATE_TURNING_OFF == state) {
+                }else if (BluetoothAdapter.STATE_TURNING_OFF == state) {
                     if (null != mBluetoothEventHandler) {
                         mBluetoothEventHandler.onBluetoothOff();
                         mainActivity.mBluetoothEventHandler.onBluetoothOff();
@@ -478,19 +480,19 @@ public  class BluetoothManager implements IBluetoothManager {
 
     public void destroy() {
         Log.d(TAG, "destroy()");
-        mInstance = null;
+        mInstance = new BluetoothManager(mContext);
         endConnection();
         disableBluetooth();
+        BluetoothUtil.clearConnectionFlags();
         if (null != mContext) {
             mContext.unregisterReceiver(mBluetoothReceiver);
-            mBluetoothReceiver = null;
-            mContext = null;
+            mBluetoothReceiver = new BluetoothReceiver();
         }
-        mBluetoothAdapter = null;
-        mFoundDeviceList = null;
-        mBoundedDeviceList = null;
-        mBluetoothEventHandler = null;
-        mClientBluetoothSocket = null;
+        if (null != mBluetoothEventHandler) {
+            int resultCode = IBluetoothEventHandler.RESULT_FAIL;
+            mainActivity.mBluetoothEventHandler.onClientSocketConnectResult(null, resultCode);
+        }
+
     }
 
 
@@ -558,6 +560,8 @@ public  class BluetoothManager implements IBluetoothManager {
         @Override
         public void onBluetoothOff() {
             // TODO Auto-generated method stub
+            destroy();
+//            mClientCommunicateBluetoothSocketMap = new HashMap<String, BluetoothSocket>();
             Log.d(TAG, "onDeviceFound() device= " );
 
         }
@@ -567,44 +571,6 @@ public  class BluetoothManager implements IBluetoothManager {
 
         }
     };
-
-//    public String traslateString(String strData)
-//    {
-////        if (strData ==null || strData.length()<3)
-////        {
-////            return "";
-////        }
-////        String strFlag ="";
-////        String strValue ="";
-////        if(strData.length()>=3)
-////        {
-////            Message msg = new Message();
-////            Bundle bundle = new Bundle();
-////            bundle.putString("data",strData);
-////            msg.setData(bundle);
-//////            mainActivity.mHandler.sendMessageDelayed(msg,0);
-//////            strFlag = strData.substring(0,1);//截取前五位标志位
-//////            strValue = strData.substring(1,3);//截取中间两位数据位
-//////            switch (strFlag)
-//////            {
-//////                case BluetoothStrEnum.temp:
-//////                    mainActivity.description.setText("同步温度："+strValue);
-//////                    mainActivity.textViewTemp.setText(strValue+"℃");
-//////                    Toast.makeText(mContext, "同步温度"+strValue+"℃", Toast.LENGTH_SHORT).show();
-//////                    break;
-//////                case BluetoothStrEnum.power:
-//////                    mainActivity.description.setText("同步电量："+strValue);
-//////                    mainActivity.waveViewCircle.setmProgress(Integer.getInteger(strValue));
-//////                    Toast.makeText(mContext, "同步电量："+strValue+"%", Toast.LENGTH_SHORT).show();
-//////                    break;
-//////                default:
-//////                    break;
-//////            }
-////        }
-////        receiveString="";
-////        return strValue;
-//    }
-
 
 
 }

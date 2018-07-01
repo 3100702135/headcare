@@ -206,6 +206,12 @@ public class LD_WaveView extends View {
         /**
          * 绘制轨迹
          */
+        if (mProgress<=40 && mProgress>20)//如果进度达到40 颜色变为黄色
+            mPaint.setColor(Color.YELLOW);
+        else if(mProgress<=20)//如果进度达到20 颜色变为红色
+            mPaint.setColor(Color.RED);
+        else
+            mPaint.setColor(mWaveColor);
         canvas.drawPath(mPath,mPaint);
         Rect rect = new Rect();
 
