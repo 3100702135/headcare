@@ -29,7 +29,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
-
+import static android.app.Activity.RESULT_OK;
+import static com.example.administrator.headcare.util.BluetoothErrorCode.CONNET_FAILED;
+import static com.example.administrator.headcare.util.BluetoothErrorCode.CONNET_SUCCESS;
+import static com.example.administrator.headcare.util.BluetoothErrorCode.RESULT_SUCCESS;
 import static java.lang.Thread.sleep;
 
 public  class BluetoothManager implements IBluetoothManager {
@@ -37,6 +40,7 @@ public  class BluetoothManager implements IBluetoothManager {
     /**
      * 蓝牙模块被外面可见时间
      */
+    private static  boolean findFlag = false;//发现蓝牙标志
     private static final int BLUETOOTH_VISIBLE_TIME = 300;
     public static final String BLUETOOTH_SOCKET_NAME = "Headcare";
     public static final String pin = "1234";
@@ -60,6 +64,7 @@ public  class BluetoothManager implements IBluetoothManager {
     private CopyOnWriteArrayList<String> mBoundingDeviceFlagList = new CopyOnWriteArrayList<String>();
     public MainActivity mainActivity;
     private static final String TAG = "BluetoothManager";
+    private static  boolean connectFlag = false;
     /**
      * 客户端的UUID
      */
@@ -122,7 +127,7 @@ public  class BluetoothManager implements IBluetoothManager {
         BluetoothUtil.makeBluetoothVisible(mContext, BLUETOOTH_VISIBLE_TIME);
         //搜索可以看到的设备
         searchAvailableDevice();
-        return BluetoothErrorCode.RESULT_SUCCESS;
+        return RESULT_SUCCESS;
     }
 
     @Override
@@ -130,7 +135,7 @@ public  class BluetoothManager implements IBluetoothManager {
         //当蓝牙设备没有启动成功时返回false
         boolean result = mBluetoothAdapter.startDiscovery();
         Log.d(TAG, "searchAvailableDevice()| triggered? " + result);
-        return result ? BluetoothErrorCode.RESULT_SUCCESS : BluetoothErrorCode.RESULT_ERROR;
+        return result ? RESULT_SUCCESS : BluetoothErrorCode.RESULT_ERROR;
     }
 
     @Override
@@ -205,7 +210,6 @@ public  class BluetoothManager implements IBluetoothManager {
                 } catch (Exception e) {
 
                 }
-
                 break;
             default:
                 boolean hasBound = BluetoothUtil.boundDeviceIfNeed(device);
@@ -221,21 +225,19 @@ public  class BluetoothManager implements IBluetoothManager {
     }
 
     public void createClientSocket(BluetoothDevice device) {
-        int resultCode = IBluetoothEventHandler.RESULT_FAIL;
+        int resultCode = BluetoothErrorCode.CONNET_DOING;
         try {
             mBluetoothAdapter.cancelDiscovery();
             mClientBluetoothSocket = device.createRfcommSocketToServiceRecord(UUID_CLIENT);
             mClientCommunicateBluetoothSocketMap.put(device.getAddress(), mClientBluetoothSocket);
             Log.d(TAG, "createClientSocket()| create a client socket success");
-            resultCode = IBluetoothEventHandler.RESULT_SUCCESS;
             Log.v(TAG, "createClientSocket()| create a client socket success");
         } catch (Exception ex) {
             Log.d(TAG, "createClientSocket()| error happened", ex);
         }
         //对外连接建立后需要开始监听从client链接写入的数据，并返回给外层
         readDataFromServerConnection(device.getAddress());
-
-        if (null != mBluetoothEventHandler) {
+        if (null != mainActivity.mBluetoothEventHandler) {
             mainActivity.mBluetoothEventHandler.onClientSocketConnectResult(device, resultCode);
         }
     }
@@ -262,22 +264,31 @@ public  class BluetoothManager implements IBluetoothManager {
                     }
                     byte[] tempData = new byte[4];
                     is = mClientBluetoothSocket.getInputStream();
+                    if (null != mainActivity.mBluetoothEventHandler) {
+                        connectFlag = true;
+                        mainActivity.mBluetoothEventHandler.onClientSocketConnectResult(null, CONNET_SUCCESS);
+                    }
                     while(null != is) {
                         //is的 read是阻塞的，来了数据才往下走
                         int readCount = 0; // 已经成功读取的字节的个数
                         while (readCount < 4) {
                             readCount += is.read(tempData, readCount, 4 - readCount);
                         }
-                        if (null != mBluetoothEventHandler) {
-//                            mBluetoothEventHandler.onReadServerSocketData(mClientBluetoothSocket.getRemoteDevice(), tempData, bytesRead);
+                        if (null != mainActivity.mBluetoothEventHandler) {
                             mainActivity.mBluetoothEventHandler.reflash(tempData, readCount);
                         }
                     }
                 } catch (Exception e) {
+                    connectFlag = false;
                     Log.d(TAG, "readDataFromServerConnection()| read data failed", e);
-//                    mainActivity.description.setText("连接蓝牙异常，请重试！");
                 } finally {
-                    //不能加is.close()，否则下次读失败
+                    if(connectFlag==false)
+                    {
+                        if (null != mainActivity.mBluetoothEventHandler) {
+                            mainActivity.mBluetoothEventHandler.onClientSocketConnectResult(null, CONNET_FAILED);
+                        }
+                    }
+
                 }
             }
         });
@@ -348,16 +359,6 @@ public  class BluetoothManager implements IBluetoothManager {
             if (null != mClientBluetoothSocket) {
                 mClientBluetoothSocket.close();
             }
-//            Iterator<Map.Entry<String, BluetoothSocket>> iterator = mClientCommunicateBluetoothSocketMap.entrySet().iterator();
-//            while (iterator.hasNext()) {
-//                Map.Entry<String, BluetoothSocket> entry = iterator.next();
-//                String deviceAddress = entry.getKey();
-//                Log.d(TAG, "endConnection()| free socket for :" + deviceAddress);
-//                BluetoothSocket clientSocket = entry.getValue();
-//                if (null != clientSocket) {
-//                    clientSocket.close();
-//                }
-//            }
             mClientCommunicateBluetoothSocketMap = new HashMap<String, BluetoothSocket>();;
         } catch (Exception ex) {
             Log.d(TAG, "endConnection() failed", ex);
@@ -427,6 +428,7 @@ public  class BluetoothManager implements IBluetoothManager {
                 mFoundDeviceList.add(device);
                 //自动连接因为对方没有应用没有起来而经常失败，这里不能用自动连接的方式，改为用户触发的方式比较好
                 if (null != mBluetoothEventHandler && mBluetoothEventHandler.isDeviceMatch(device) && BLUETOOTH_SOCKET_NAME.equals(device.getName())) {
+                    findFlag=true;
                     createClientSocket(device);
                 }
             } else if ("android.bluetooth.device.action.PAIRING_REQUEST".equals(action)) {
@@ -439,6 +441,7 @@ public  class BluetoothManager implements IBluetoothManager {
                         boolean ret = ClsUtils.setPin(device.getClass(), device, pin);
                     }
                     if (null != mBluetoothEventHandler && mBluetoothEventHandler.isDeviceMatch(device) && BLUETOOTH_SOCKET_NAME.equals(device.getName())) {
+                        findFlag=true;
                         createClientSocket(device);
                     }
                 } catch (Exception e) {
@@ -447,6 +450,10 @@ public  class BluetoothManager implements IBluetoothManager {
             } else if (BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)) {
                 Log.d(TAG, "onReceive()| discovery started");
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
+                if(findFlag==false)
+                {
+                    mainActivity.mBluetoothEventHandler.onDeviceFound(device);
+                }
                 Log.d(TAG, "onReceive()| discovery finished");
             } else if (BluetoothDevice.ACTION_BOND_STATE_CHANGED.equals(action)) {
                 // 绑定状态改变的广播
@@ -489,7 +496,7 @@ public  class BluetoothManager implements IBluetoothManager {
             mBluetoothReceiver = new BluetoothReceiver();
         }
         if (null != mBluetoothEventHandler) {
-            int resultCode = IBluetoothEventHandler.RESULT_FAIL;
+            int resultCode = CONNET_FAILED;
             mainActivity.mBluetoothEventHandler.onClientSocketConnectResult(null, resultCode);
         }
 
@@ -521,21 +528,7 @@ public  class BluetoothManager implements IBluetoothManager {
         /*读取服务端数据*/
         @Override
         public void onReadServerSocketData(BluetoothDevice remoteDevice, byte[] data, int length) {
-            String receiveStr = new String(data);
-            try {
-                receiveStr = new String(data, 0, length, "utf-8");
-                if(receiveStr.length()<3)
-                {
-                    receiveString=receiveString+receiveStr;
-                }
-                if (receiveString.length()>=3)
-                {
-//                    traslateString(receiveString);//界面赋值
-                }
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-            Log.d(TAG, "onReadServerSocketData: "+receiveString);
+
         }
 
         @Override

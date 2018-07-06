@@ -60,11 +60,17 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
+import static com.example.administrator.headcare.util.BluetoothErrorCode.CONNET_DOING;
+import static com.example.administrator.headcare.util.BluetoothErrorCode.CONNET_FAILED;
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
+    private static  int blueFlushtFlag = 0;//蓝牙连接标志
+    private static  boolean findFlag = false;//发现蓝牙标志
+
     private String powerValue;//电量值
     private String temp;//温度值
-    private String timeMin;//剩余照射时间分钟
+    private String timeMin="";//剩余照射时间分钟
     private String timeSec;//剩余照射时间秒
     private String FLight;//设置的前照射亮度
     private String MLight;//设置的中射亮度
@@ -90,9 +96,9 @@ public class MainActivity extends AppCompatActivity
     private MyTempView mTempView;//动态温度计
     private Themometer mTView;//动态温度计
 
-    public  VerticalSeekBar verticalSeekbarF;//前额亮度控件
-    public  VerticalSeekBar verticalSeekbarM;//头顶亮度控件
-    public  VerticalSeekBar verticalSeekbarB;//后额亮度控件
+    public  SeekBar seekBarF;//前额亮度控件
+    public  SeekBar seekBarM;//头顶亮度控件
+    public  SeekBar seekBarB;//后额亮度控件
     private boolean run=false; //是否启动了
     private Context context;
 
@@ -129,9 +135,9 @@ public class MainActivity extends AppCompatActivity
         description = (TextView) findViewById(R.id.description);
         waveViewCircle = (LD_WaveView) findViewById(R.id.waveViewCircle);//电量显示控件
         textViewTime = findViewById(R.id.textViewTime);
-        verticalSeekbarF = (VerticalSeekBar) findViewById(R.id.verticalSeekbarF);//拿到前额控件实例
-        verticalSeekbarF.setMax(100);//为控件设置大小
-        verticalSeekbarF.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        seekBarF = (SeekBar) findViewById(R.id.seekBarF);//拿到前额控件实例
+        seekBarF.setMax(100);//为控件设置大小
+        seekBarF.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 description.setText("亮度生效");
@@ -146,7 +152,7 @@ public class MainActivity extends AppCompatActivity
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if(progress==100)
                 {
-                    verticalSeekbarF.setProgress(99);
+                    seekBarF.setProgress(99);
                     progress=99;
                 }
                 description.setText("前额亮度：" + progress + "%");
@@ -155,9 +161,9 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        verticalSeekbarM = (VerticalSeekBar) findViewById(R.id.verticalSeekbarT);//拿到前额控件实例
-        verticalSeekbarM.setMax(100);//为控件设置大小
-        verticalSeekbarM.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        seekBarM = (SeekBar) findViewById(R.id.seekBarM);//拿到前额控件实例
+        seekBarM.setMax(100);//为控件设置大小
+        seekBarM.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 description.setText("亮度生效");
@@ -172,7 +178,7 @@ public class MainActivity extends AppCompatActivity
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if(progress==100)
                 {
-                    verticalSeekbarM.setProgress(99);
+                    seekBarM.setProgress(99);
                     progress=99;
                 }
                 description.setText("头顶亮度：" + progress + "%");
@@ -181,9 +187,9 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        verticalSeekbarB = (VerticalSeekBar) findViewById(R.id.verticalSeekbarB);//拿到前额控件实例
-        verticalSeekbarB.setMax(100);//为控件设置大小
-        verticalSeekbarB.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        seekBarB = (SeekBar) findViewById(R.id.seekBarB);//拿到前额控件实例
+        seekBarB.setMax(100);//为控件设置大小
+        seekBarB.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 description.setText("亮度生效");
@@ -198,7 +204,7 @@ public class MainActivity extends AppCompatActivity
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if(progress==100)
                 {
-                    verticalSeekbarB.setProgress(99);
+                    seekBarB.setProgress(99);
                     progress=99;
                 }
                 description.setText("后枕亮度：" + progress + "%");
@@ -224,13 +230,12 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if(progress==Integer.parseInt(timeMin))
+                if(timeMin!="" && progress==Integer.parseInt(timeMin))
                 {
                     return;
                 }
                 if(progress<10)
                 {
-                    verticalSeekbarB.setProgress(10);
                     progress=10;
                 }
                 description.setText("设置时间：" + progress + "分钟后，关闭灯光");
@@ -314,6 +319,7 @@ public class MainActivity extends AppCompatActivity
             if (null != boundedList) {
                 for (BluetoothDevice device : boundedList) {
                     if (device.getName().contains(mBluetoothManager.BLUETOOTH_SOCKET_NAME)) {
+                        findFlag=true;
                         mBluetoothManager.createConnection(device);
                         return;
                     }
@@ -324,6 +330,7 @@ public class MainActivity extends AppCompatActivity
             if (null != foundedList) {
                 for (BluetoothDevice device : foundedList) {
                     if (device.getName().contains(mBluetoothManager.BLUETOOTH_SOCKET_NAME)) {
+                        findFlag=true;
                         mBluetoothManager.createConnection(device);
                     }
                 }
@@ -403,40 +410,6 @@ public class MainActivity extends AppCompatActivity
         dialog.show();
     }
 
-
-//    private void  showChoose(final String items[])
-//    {
-////        final String items[] = {"我是Item一", "我是Item二", "我是Item三", "我是Item四"};
-//        HashMap<String, String> map = new HashMap<String, String>();
-//        AlertDialog dialog = new AlertDialog.Builder(this)
-////                .setIcon(R.mipmap.icon)//设置标题的图片
-//                .setTitle("已搜索到的蓝牙设备")//设置对话框的标题
-//                .setSingleChoiceItems(items, items.length-1, new DialogInterface.OnClickListener() {
-//                    @Override
-//                    public void onClick(DialogInterface dialog, int which) {
-//                        Toast.makeText(MainActivity.this, items[which], Toast.LENGTH_SHORT).show();
-//                    }
-//                })
-//                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
-//                    @Override
-//                    public void onClick(DialogInterface dialog, int which) {
-//                        dialog.dismiss();
-//                    }
-//                })
-//                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
-//                    @Override
-//                    public void onClick(DialogInterface dialog, int which) {
-//                        description.setText(items[which+1]);
-//                        clickAddress =blueMap.get(items[which+1]);
-//                        dialog.dismiss();
-//                        adapter.cancelDiscovery();
-//                        new BlueThread().start();
-//                    }
-//                }).create();
-//        dialog.show();
-//    }
-
-
     public IBluetoothEventHandler mBluetoothEventHandler = new IBluetoothEventHandler() {
 
         @Override
@@ -451,19 +424,18 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         public void onDeviceFound(BluetoothDevice device) {
-
+            description.setText("未找到指定蓝牙设备！");
+            Toast.makeText(MainActivity.this, "未找到指定蓝牙设备！", Toast.LENGTH_SHORT).show();
         }
 
         @Override
         public void onClientSocketConnectResult(BluetoothDevice device, int resultCode) {
-            Log.d("TAG", "重新连接 " );
-            if (null == device || RESULT_SUCCESS != resultCode) {
-                blueFresh.setTitle("重新连接");
-            }
-            else
-            {
-                blueFresh.setTitle("已连接");
-            }
+            blueFlushtFlag = resultCode;
+            new Thread(){
+                public void run(){
+                    handler.post(runnableFlushUi);
+                }
+            }.start();
         }
 
         @Override
@@ -532,6 +504,33 @@ public class MainActivity extends AppCompatActivity
         }
     };
 
+
+    // 构建Runnable对象，在runnable中更新蓝牙按钮
+    Runnable   runnableFlushUi=new  Runnable(){
+        @Override
+        public void run() {
+            try{
+                if (blueFlushtFlag ==CONNET_DOING) {
+                    blueFresh.setTitle("连接中...");
+                }
+                else if (CONNET_FAILED == blueFlushtFlag) {
+                    blueFresh.setTitle("重新连接");
+                }
+                else
+                {
+                    blueFresh.setTitle("已连接");
+                }
+
+            }
+            catch (Exception e)
+            {
+                Log.d("TAG", "runnableUi()| runnableUi failed", e);
+            }
+
+        }
+
+    };
+
     // 构建Runnable对象，在runnable中更新界面
     Runnable   runnableUi=new  Runnable(){
         @Override
@@ -565,24 +564,24 @@ public class MainActivity extends AppCompatActivity
                     textViewTime.setText(strTime);
                     timeSec=null;
                 }
-//                if (FLight!=null && !FLight.equals("")) {
-//                    Toast.makeText(MainActivity.this, "同步前额亮度："+FLight+"%", Toast.LENGTH_SHORT).show();
-//                    description.setText("同步前额亮度：" + FLight + "%");
-//                    verticalSeekbarF.setProgress(Integer.parseInt(FLight));
-//                    FLight="";
-//                }
-//                if (MLight!=null && !MLight.equals("")) {
-//                    Toast.makeText(MainActivity.this, "同步顶部亮度："+MLight+"%", Toast.LENGTH_SHORT).show();
-//                    description.setText("同步顶部亮度：" + MLight + "%");
-//                    verticalSeekbarM.setProgress(Integer.parseInt(MLight));
-//                    MLight="";
-//                }
-//                if (BLight!=null && !BLight.equals("")) {
-//                    Toast.makeText(MainActivity.this, "同步后枕亮度："+BLight+"%", Toast.LENGTH_SHORT).show();
-//                    description.setText("同步前额亮度：" + BLight + "%");
-//                    verticalSeekbarB.setProgress(Integer.parseInt(BLight));
-//                    BLight="";
-//                }
+                if (FLight!=null && !FLight.equals("")) {
+                    Toast.makeText(MainActivity.this, "同步前额亮度："+FLight+"%", Toast.LENGTH_SHORT).show();
+                    description.setText("同步前额亮度：" + FLight + "%");
+                    seekBarF.setProgress(Integer.parseInt(FLight));
+                    FLight="";
+                }
+                if (MLight!=null && !MLight.equals("")) {
+                    Toast.makeText(MainActivity.this, "同步顶部亮度："+MLight+"%", Toast.LENGTH_SHORT).show();
+                    description.setText("同步顶部亮度：" + MLight + "%");
+                    seekBarM.setProgress(Integer.parseInt(MLight));
+                    MLight="";
+                }
+                if (BLight!=null && !BLight.equals("")) {
+                    Toast.makeText(MainActivity.this, "同步后枕亮度："+BLight+"%", Toast.LENGTH_SHORT).show();
+                    description.setText("同步前额亮度：" + BLight + "%");
+                    seekBarB.setProgress(Integer.parseInt(BLight));
+                    BLight="";
+                }
             }
             catch (Exception e)
             {

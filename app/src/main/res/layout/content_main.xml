@@ -10,96 +10,105 @@
     tools:showIn="@layout/app_bar_main">
 
 
-    <com.example.administrator.headcare.util.VerticalSeekBar
-        android:id="@+id/verticalSeekbarB"
+    <SeekBar
+        android:id="@+id/seekBarF"
         style="@style/CustomSeekbarStyle"
-        android:layout_width="80dp"
-        android:layout_height="160dp"
+        android:layout_width="254dp"
+        android:layout_height="40dp"
+        android:layout_marginBottom="8dp"
         android:layout_marginEnd="16dp"
         android:layout_marginRight="16dp"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="8dp"
+        android:max="99"
+        app:layout_constraintBottom_toTopOf="@+id/seekBarM"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textLine" />
+        app:layout_constraintTop_toBottomOf="@+id/textLine"
+        app:layout_constraintVertical_bias="0.74" />
 
-    <com.example.administrator.headcare.util.VerticalSeekBar
-        android:id="@+id/verticalSeekbarF"
+    <SeekBar
+        android:id="@+id/seekBarM"
         style="@style/CustomSeekbarStyle"
-        android:layout_width="80dp"
-        android:layout_height="160dp"
-        android:layout_marginLeft="16dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="30dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textLine" />
+        android:layout_width="254dp"
+        android:layout_height="40dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginTop="8dp"
+        android:max="99"
+        app:layout_constraintBottom_toTopOf="@+id/seekBarB"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/seekBarF" />
 
-    <com.example.administrator.headcare.util.VerticalSeekBar
-        android:id="@+id/verticalSeekbarT"
+    <SeekBar
+        android:id="@+id/seekBarB"
         style="@style/CustomSeekbarStyle"
-        android:layout_width="80dp"
-        android:layout_height="160dp"
-        android:layout_marginEnd="50dp"
-        android:layout_marginLeft="50dp"
-        android:layout_marginRight="50dp"
-        android:layout_marginStart="50dp"
-        android:layout_marginTop="28dp"
-        app:layout_constraintEnd_toStartOf="@+id/verticalSeekbarB"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toEndOf="@+id/verticalSeekbarF"
-        app:layout_constraintTop_toBottomOf="@+id/textLine" />
-
+        android:layout_width="254dp"
+        android:layout_height="40dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginTop="8dp"
+        android:max="99"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/seekBarM" />
 
     <TextView
         android:id="@+id/textViewF"
         android:layout_width="80dp"
         android:layout_height="20dp"
         android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
         android:layout_marginLeft="16dp"
+        android:layout_marginRight="8dp"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="5dp"
+        android:layout_marginTop="4dp"
         android:gravity="center_vertical|center_horizontal|center"
         android:text="前额亮度"
         android:textSize="12sp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/textViewT"
+        app:layout_constraintEnd_toStartOf="@+id/seekBarF"
+        app:layout_constraintHorizontal_bias="0.304"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/verticalSeekbarF"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintTop_toBottomOf="@+id/textLine"
+        app:layout_constraintVertical_bias="0.45" />
 
     <TextView
         android:id="@+id/textViewT"
         android:layout_width="80dp"
         android:layout_height="20dp"
-        android:layout_marginBottom="8dp"
-        android:layout_marginEnd="50dp"
-        android:layout_marginLeft="50dp"
-        android:layout_marginRight="50dp"
-        android:layout_marginStart="50dp"
-        android:layout_marginTop="5dp"
+        android:layout_marginBottom="16dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
         android:gravity="center"
         android:text="顶部亮度"
         android:textColorLink="@android:color/holo_green_dark"
         android:textSize="12sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/textViewB"
-        app:layout_constraintHorizontal_bias="0.807"
-        app:layout_constraintStart_toEndOf="@+id/textViewF"
-        app:layout_constraintTop_toBottomOf="@+id/verticalSeekbarT"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintBottom_toTopOf="@+id/textViewB"
+        app:layout_constraintEnd_toStartOf="@+id/seekBarM"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewF" />
 
     <TextView
         android:id="@+id/textViewB"
         android:layout_width="80dp"
         android:layout_height="20dp"
-        android:layout_marginBottom="8dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginRight="16dp"
-        android:layout_marginTop="5dp"
+        android:layout_marginBottom="4dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
         android:gravity="center"
         android:text="后枕亮度"
         android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/verticalSeekbarB"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintEnd_toStartOf="@+id/seekBarB"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewT" />
 
     <TextView
         android:id="@+id/description"
@@ -155,7 +164,7 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.537" />
+        app:layout_constraintVertical_bias="0.498" />
 
     <com.example.administrator.headcare.toolBars.LD_WaveView
         android:id="@+id/waveViewCircle"
